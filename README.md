@@ -14,6 +14,12 @@ If you want to reuse this code on your project, and have any doubt [here](https:
 
 *Work in progress*
 
+## Open issues
+
+- Work out how to evaluate game performance, i.e. how good the play of a model is in a way other than naively playing another model
+- Implement the test-time MPC fine-tuning strategy (use new class and overload `predict` method) - aim for 2-3 mins per move to mimic 90min format classical chess
+- Think about how this strategy differs from the MCTS used by AlphaZero (it's kind of exploring the future in a similar way, i.e. on-policy-ish, but maybe having access to an opponent engine is the difference c.f. the need to self-play)
+
 ## Requirements
 The necessary python packages (ATM) are listed in the requirements file.
 You can install them with
@@ -24,6 +30,24 @@ pip3 install -r requirements.txt
 
 Tensorflow is also needed, but you must install either `tensorflow` or `tensorflow-gpu` (for the development I used >= TF 2.0).
 
+### Mac installation
+
+Installing Tensorflow with GPU support on Apple Silicon is very fiddly.
+
+After lots of searching the only stable install I could achieve on an M3 Pro device using `conda` is as follows:
+```bash
+conda create -n tf-macos python=3.11.11
+pip install tensorflow==2.17
+pip install tensorflow-metal==1.1
+pip install tf_keras==2.17.0
+conda install -c conda-forge cairo
+pip install -r requirements.txt
+```
+
+Creds to [this thread](https://stackoverflow.com/questions/78845096/tensorflow-metal-not-installable-on-m2-macbook-and-github-page-is-down).
+
+### Stockfish
+
 Also, you need to download the specific 
 [stockfish binary](https://stockfishchess.org/download/) for your platform,
 for automating this made a script to automatically download it.
@@ -33,7 +57,7 @@ cd res
 chmod +x get_stockfish.sh
 ./get_stockfish.sh linux   #or "mac", depending of your platform. 
 ```
-If you want to download it manually, you have to put the stockfish executable under `res/stockfish-10-64` path, in order to the training script to detect it.
+If you want to download it manually, you have to put the stockfish executable/binary under `res/stockfish-17-macos-m1-apple-silicon` path, in order to the training script to detect it.
 
 
 ## Training
@@ -47,7 +71,7 @@ The main purpose of this part is to pre-train the model to make the policy head 
 
 ```bash
 cd src/chessrl
-python gen_data_stockfish.py ../../data/dataset_stockfish.json --games 100
+python gen_data_stockfish.py ../../res/stockfish-17-macos-m1-apple-silicon ../../data/dataset_stockfish.json --games 100
 ```
 
 Once we have a training dataset (generated or your own adapted), start the supervised training with:

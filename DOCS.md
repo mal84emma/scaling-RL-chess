@@ -100,7 +100,7 @@ By default it will listen on `localhost:9999`, but you can use the address you w
 from predict_worker import PredictWorker
 
 ENDPOINT = ('localhost', 2222)
-worker = PredictWorker(model_path='path/to/model/model.h5', endpoint=ENDPOINT)
+worker = PredictWorker(model_path='path/to/model/model.weights.h5', endpoint=ENDPOINT)
 worker.start()
 
 ...  # Make other things
@@ -109,7 +109,7 @@ worker.stop()  # Stops the threads and closes all the connections. After this th
 
 ...  # Make other things, training the model, for example
 
-worker.reload_model('path/to/model/model.h5')
+worker.reload_model('path/to/model/model.weights.h5')
 
 worker.start()   # Serve again
 
