@@ -31,18 +31,18 @@ def process_initializer():
 
 
 def get_model_path(directory):
-    """ Finds all the .h5 files (neural net weights) and returns the path to
+    """ Finds all the .weights.h5 files (neural net weights) and returns the path to
     the most trained version. If there are no models, returns a default model
-    name (model-0.h5)
+    name (model-0.weights.h5)
 
     Parameters:
-        directory: str. Directory path in which the .h5 files are contained
+        directory: str. Directory path in which the .weights.h5 files are contained
 
     Returns:
-        path: str. Path to the file (directory+'/model-newest.h5')
+        path: str. Path to the file (directory+'/model-newest.weights.h5')
     """
 
-    path = directory + "/model-0.h5"
+    path = directory + "/model-0.weights.h5"
 
     # Model name
     models = [f for f in os.listdir(directory) if f.endswith("h5")]
@@ -73,7 +73,7 @@ def play_game(agent):
     while gam.get_result() is None:
         start = timer()
         bm, am = agent.best_move(gam, real_game=False, ai_move=True,
-                                 max_iters=900)
+                                 max_iters=100)
         gam.move(bm)  # Make our move
         gam.move(am)  # Make oponent move
         end = timer()

@@ -20,7 +20,7 @@ class GameAgent(Game):
             self.agent = Agent(not player_color, weights=agent)
         else:
             raise ValueError("An agent or path to the agents "
-                             "weights (.h5) is needed")
+                             "weights (.weights.h5) is needed")
 
     def move(self, movement):
         """ Makes a move. If it's not your turn, the agent will play and if

@@ -15,7 +15,7 @@ class PredictWorker():
     """
 
     def __init__(self,
-                 model_path='../../data/models/model1-unsuperv/model-0.h5',
+                 model_path='../../data/models/model1-unsuperv/model-0.weights.h5',
                  endpoint=('localhost', 9999)
                  ):
         self.model = ChessModel(weights=model_path)
@@ -65,7 +65,7 @@ class PredictWorker():
         worker stopped.
 
         Parameters:
-            model_path: string. Route to the model weights (.h5 file).
+            model_path: string. Route to the model weights (.weights.h5 file).
         """
         self.model = ChessModel(weights=model_path)
 

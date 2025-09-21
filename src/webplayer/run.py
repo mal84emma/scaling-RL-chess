@@ -78,9 +78,9 @@ def main():
                         "Default: localhost",
                         default='localhost')
     parser.add_argument('--agent_path', metavar='agent_path', type=str,
-                        help="Path to the .h5 weights of the NN"
-                        "Default: ../../data/models/model0/model-0.h5",
-                        default='../../data/models/model0/model-0.h5')
+                        help="Path to the .weights.h5 weights of the NN"
+                        "Default: ../../data/models/model0/model-0.weights.h5",
+                        default='../../data/models/model0/model-0.weights.h5')
 
     args = parser.parse_args()
 

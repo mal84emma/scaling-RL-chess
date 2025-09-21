@@ -31,18 +31,18 @@ def process_initializer():
 
 
 def get_model_path(directory):
-    """ Finds all the .h5 files (neural net weights) and returns the path to
+    """ Finds all the .weights.h5 files (neural net weights) and returns the path to
     the most trained version. If there are no models, returns a default model
-    name (model-0.h5)
+    name (model-0.weights.h5)
 
     Parameters:
-        directory: str. Directory path in which the .h5 files are contained
+        directory: str. Directory path in which the .weights.h5 files are contained
 
     Returns:
-        path: str. Path to the file (directory+'/model-newest.h5')
+        path: str. Path to the file (directory+'/model-newest.weights.h5')
     """
 
-    path = directory + "/model-0.h5"
+    path = directory + "/model-0.weights.h5"
 
     # Model name
     models = [f for f in os.listdir(directory) if f.endswith("h5")]
@@ -61,20 +61,19 @@ def play_game_job(id: int, model_path, stockfish_depth, log=False):
 
     Parameters:
         id: Play ID (i.e. worker ID).
-        model_path: path to the .h5 model. If it not exists, it will play with
+        model_path: path to the .weights.h5 model. If it not exists, it will play with
         a fresh one.
         stockfish_depth: int. Difficulty of stockfish.
     """
     logger = Logger.get_instance()
 
     agent_is_white = True if random.random() <= .5 else False
-    chess_agent = Agent(color=agent_is_white)
     game_env = GameStockfish(player_color=agent_is_white,
-                             stockfish='../../res/stockfish-10-64',
+                             stockfish='../../res/stockfish-17-macos-m1-apple-silicon',
                              stockfish_depth=stockfish_depth)
 
     try:
-        chess_agent.load(model_path)
+        chess_agent = Agent(color=agent_is_white,weights_path=model_path)
     except OSError:
         logger.error("Model not found. Exiting.")
         return None
@@ -144,4 +143,4 @@ def benchmark(model_dir, workers=1, games=10, stockfish_depth=10, log=False):
 
 
 if __name__ == "__main__":
-    benchmark('../../data/models/model1-unsuperv', workers=2, log=True)
+    benchmark('../../data/models/test_model', workers=2, log=True)

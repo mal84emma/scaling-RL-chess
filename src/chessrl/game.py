@@ -63,7 +63,6 @@ class Game(object):
                 'result': res,
                 'player_color': self.player_color,
                 'date': self.date}
-        return moves
 
     def get_fen(self):
         return self.board.board_fen()

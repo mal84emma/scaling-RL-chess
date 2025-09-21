@@ -5,7 +5,7 @@ class GameWrapper(object):
     _wrapper = None
 
     def __init__(self, player_color=True,
-                 agent_path='../../data/models/model0/model-0.h5'):
+                 agent_path='../../data/models/model0/model-0.weights.h5'):
         self.game = GameAgent(agent_path,
                               player_color=player_color)
 

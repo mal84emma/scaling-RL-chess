@@ -17,10 +17,10 @@ class Agent(Player):
         uci_dict: dict. Dictionary with mappings 'uci'-> int. It's used
         to predict the policy only over the legal movements.
     """
-    def __init__(self, color, weights=None):
+    def __init__(self, color, weights_path=None):
         super().__init__(color)
 
-        self.model = ChessModel(compile_model=True, weights=weights)
+        self.model = ChessModel(compile_model=True, weights=weights_path)
         self.move_encodings = netencoder.get_uci_labels()
         self.uci_dict = {u: i for i, u in enumerate(self.move_encodings)}
 
@@ -94,5 +94,5 @@ class Agent(Player):
     def load(self, path):
         self.model.load_weights(path)
 
-    def clone(self):
-        return Agent(self.color, '../../data/models/model1-unsuperv/model-0.h5')
+    def clone(self, ):
+        return Agent(self.color, self.model.weights_path)

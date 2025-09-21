@@ -3,13 +3,13 @@ This module contains the neural network model used by the agent to make
 decisions.
 """
 
-from tensorflow.keras.layers import (Dense, Conv2D, BatchNormalization,
+from keras.layers import (Dense, Conv2D, BatchNormalization,
                                      Activation, Flatten, Input, Add)
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import MSE, categorical_crossentropy
-from tensorflow.keras import Model
-from tensorflow.keras.callbacks import TensorBoard
-from tensorflow.compat.v1.keras import backend as K
+from keras.optimizers import Adam
+from keras.losses import mean_squared_error, categorical_crossentropy
+from keras import Model
+from keras.callbacks import TensorBoard
+from keras import backend as K
 
 
 class ChessModel(object):
@@ -62,23 +62,26 @@ class ChessModel(object):
 
         self.model = Model(inp, [pol_head, val_head])
 
+        self.weights_path = weights
         if weights:
             self.model.load_weights(weights)
 
         if compile_model:
-            self.model.compile(Adam(lr=0.002),
+            self.model.compile(Adam(learning_rate=0.002),
                                loss=['categorical_crossentropy',
                                      'mean_squared_error'],
                                metrics={'policy_out': 'accuracy'})
 
     def predict(self, inp):
-        return self.model.predict(inp)
+        return self.model.predict(inp, verbose=None)
 
     def load_weights(self, weights_path):
         self.model.load_weights(weights_path)
+        self.weights_path = weights_path
 
     def save_weights(self, weights_path):
         self.model.save_weights(weights_path)
+        self.weights_path = weights_path
 
     def train(self, game_state, game_outcome, next_action):
         pass
@@ -92,11 +95,11 @@ class ChessModel(object):
                                                update_freq=1)
             callbacks.append(tensorboard_callback)
 
-        self.model.fit_generator(generator,
-                                 epochs=epochs,
-                                 validation_data=val_gen,
-                                 verbose=1,
-                                 callbacks=callbacks)
+        self.model.fit(generator,
+                        epochs=epochs,
+                        validation_data=val_gen,
+                        verbose=1,
+                        callbacks=callbacks)
 
     def __del__(self):
         K.clear_session()
@@ -105,7 +108,7 @@ class ChessModel(object):
         policy_pred, val_pred = y_pred[0], y_pred[1]
         policy_true, val_true = y_true[0], y_true[1]
 
-        return MSE(val_true, val_pred) - \
+        return mean_squared_error(val_true, val_pred) - \
             categorical_crossentropy(policy_true, policy_pred)
 
     def __res_block(self, block_input):

@@ -9,18 +9,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 
 def get_model_path(directory):
-    """ Finds all the .h5 files (neural net weights) and returns the path to
+    """ Finds all the .weights.h5 files (neural net weights) and returns the path to
     the most trained version. If there are no models, returns a default model
-    name (model-0.h5)
+    name (model-0.weights.h5)
 
     Parameters:
-        directory: str. Directory path in which the .h5 files are contained
+        directory: str. Directory path in which the .weights.h5 files are contained
 
     Returns:
-        path: str. Path to the file (directory+'/model-newest.h5')
+        path: str. Path to the file (directory+'/model-newest.weights.h5')
     """
 
-    path = directory + "/model-0.h5"
+    path = directory + "/model-0.weights.weights.h5"
 
     # Model name
     models = [f for f in os.listdir(directory) if f.endswith("h5")]
@@ -49,6 +49,9 @@ def train(model_dir, dataset_path, epochs=1, batch_size=8):
     data_train = DatasetGame()
     data_train.load(dataset_path)
 
+    if not os.path.exists(model_dir):
+        logger.info(f"Model directory {model_dir} does not exist yet. Creating it...")
+        os.mkdir(model_dir)
     model_path = get_model_path(model_dir)
 
     logger.info("Loading the agent...")
@@ -61,6 +64,8 @@ def train(model_dir, dataset_path, epochs=1, batch_size=8):
                       validation_split=0.25, batch_size=batch_size)
     logger.info("Saving the agent...")
     chess_agent.save(model_path)
+    # TODO: question; should this increment the model number before saving?
+    # try retraining an existing model and see if it overwrites or creates a new one
 
 
 def main():
