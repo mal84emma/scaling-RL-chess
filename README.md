@@ -1,5 +1,7 @@
 # Neural chess <br> Reinforcement Learning based chess engine.
 
+**TODO** Update project description and credit previous author.
+
 Personal project to build a chess engine based using reinforcement learning.
 
 The idea is to some sort replicate the system built by DeepMind with AlphaZero. I'm
@@ -7,12 +9,21 @@ aware that the computational resources to achieve their results is huge, but my 
 it's simply to reach an amateur chess level performance (about 1200-1400 Elo), not
 state of the art.
 
-At this moment, the approach I'm using is based on pre-training a model using self-play data of a Stockfish 
-algorithm. Later, the idea is to put two models to play agaisnt each other and make selection/merges of weights (RL part).
+At this moment, the approach I'm using is based on pre-training a model using self-play data of a Stockfish algorithm. Later, the idea is to put two models to play against each other and make selection/merges of weights (RL part).
 
 If you want to reuse this code on your project, and have any doubt [here](https://github.com/AIRLegend/ChessRL/blob/master/DOCS.md) you will find some explanation about the most important classes. Also, feel free to open an issue on this repo to ask.
 
 *Work in progress*
+
+## Notes
+
+- Current base model settings (`modelb`):
+   - ToDo
+
+- introduced `move_quality` parameter to Stockfish player to allow it to play worse moves (to simulate lower Elo opponents) - need to add some stochasticity for the predictions to avoid all the simulated games being the same
+- I think if the original policy is crap, you don't really get any information out of the model predictions. It's also possible this approach isn't super powerful for chess because the state space is so unbelievably huge, so we can't explore a meaningful portion of the possible futures
+- when predicting games, because the policy is deterministic, the first move is always the same, which means all the training data has the same opening move, which is bad, how can I introduce a bit of exploration to this first move? we also want a bit of randomness in stockfish as well to avoid all games being the same, maybe the training_mode flag is good enough?
+- what if we accumulated training over the game? I.e. didn't reset the agent after each move
 
 ## Open issues
 
@@ -81,7 +92,7 @@ cd src/chessrl
 python supervised.py ../../data/models/model1 ../../data/dataset_stockfish.json --epochs 2 --bs 4
 ```
 
-Once we have a pretrained model, we can move to the self-play phase. The incharged of this process is the `selfplay.py` script, which will fire up a instance of the model which play agaisnt itself and after each one, makes a training round (saving the model and the results). Please, take a look at the possible arguments. However, here you have an example. (Keep in mind that this is an expensive process which takes a considerable amount of time per move).
+Once we have a pre-trained model, we can move to the self-play phase. The incharged of this process is the `selfplay.py` script, which will fire up a instance of the model which play against itself and after each one, makes a training round (saving the model and the results). Please, take a look at the possible arguments. However, here you have an example. (Keep in mind that this is an expensive process which takes a considerable amount of time per move).
 
 ```bash
 cd src/chessrl
@@ -91,12 +102,12 @@ python selfplay.py ../../data/models/model1-superv --games 100
 
 ## How do I view the progress?
 
-The neural network trainning evolution can be monitored with Tensorboard, simply:
+The neural network training evolution can be monitored with Tensorboard, simply:
 
 ```bash
 tensorboard --logdir data/models/model1/train
 ```
-(And set the "Horizontal axis" to "WALL" for viewing all the diferent runs.)
+(And set the "Horizontal axis" to "WALL" for viewing all the different runs.)
 
 Also, in the same model directory you will find a `gameplays.json` file which
 contains the recorded training games of the model. With this, we can study its
@@ -111,5 +122,4 @@ Yes. Under `src/webplayer` you will find a Flask app which deploys a web interfa
 
 1. Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning
    Algorithm, Silver, D. et al. https://arxiv.org/pdf/1712.01815.pdf
-2. Mastering the game of Go without human knowledge. Silver, D. et al. https://www.nature.com/articles/nature24270.epdf?author_access_token=VJXbVjaSHxFoctQQ4p2k4tRgN0jAjWel9jnR3ZoTv0PVW4gB86EEpGqTRDtpIz-2rmo8-KG06gqVobU5NSCFeHILHcVFUeMsbvwS-lxjqQGg98faovwjxeTUgZAUMnRQ
-
+2. Mastering the game of Go without human knowledge. Silver, D. et al. https://www.nature.com/articles/nature24270.epdf
