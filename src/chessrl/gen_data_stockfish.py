@@ -9,19 +9,21 @@ import argparse
 import numpy as np
 
 
-def play_game(stockfish_bin, dataset, depth=1, random_dep=False, tqbar=None):
-    is_white = True if np.random.random() <= .5 else False
-    game_depth = depth
-    player_depth = depth
+def play_game(stockfish_bin, dataset, depth=10, tqbar=None):
 
-    if random_dep:
-        game_depth = int(np.random.normal(depth, 1))
-        player_depth = int(np.random.normal(depth, 1))
+    is_white = True if np.random.random() <= .5 else False
 
     g = GameStockfish(stockfish=stockfish_bin,
-                      player_color=is_white, stockfish_depth=game_depth)
-    stockf = Stockfish(is_white, stockfish_bin, player_depth)
+                      player_color=is_white,
+                      stockfish_depth=depth,
+                      training_mode=True)
+    stockf = Stockfish(is_white, stockfish_bin, depth, training_mode=True)
 
+    # first move
+    bm = stockf.best_move(g, first_move=True)
+    g.move(bm)
+
+    # play out game
     while g.get_result() is None:
         bm = stockf.best_move(g)
         g.move(bm)
@@ -35,8 +37,7 @@ def play_game(stockfish_bin, dataset, depth=1, random_dep=False, tqbar=None):
     stockf.kill()
 
 
-def gen_data(stockfish_bin, save_path, num_games=100, workers=2, depth=1,
-             random_dep=False):
+def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
     logger = Logger.get_instance()
     d = DatasetGame()
     pbar = tqdm(total=num_games)
@@ -46,8 +47,6 @@ def gen_data(stockfish_bin, save_path, num_games=100, workers=2, depth=1,
             executor.submit(play_game,
                             stockfish_bin=stockfish_bin,
                             dataset=d,
-                            depth=depth,
-                            random_dep=random_dep,
                             tqbar=pbar)
     pbar.close()
     logger.info("Saving dataset...")
@@ -64,14 +63,14 @@ def main():
     parser.add_argument('--games', metavar='games', type=int,
                         default=10)
     parser.add_argument('--depth', metavar='depth', type=int,
-                        default=1, help="Stockfish tree depth.")
+                        default=10, help="Stockfish tree depth.")
     parser.add_argument('--workers', metavar='workers', type=int,
                         default=2, help="Number of workers for games.")
     parser.add_argument('--random_depth',
                         action='store_true',
                         default=False,
                         help="Use normal distribution of depths with "
-                        "mean --depth.")
+                        "mean --depth.") # legacy - random depth doesn't affect moves much
     parser.add_argument('--debug',
                         action='store_true',
                         default=False,
@@ -85,7 +84,7 @@ def main():
     if args.debug:
         logger.set_level(0)
 
-    gen_data(args.stockfish_bin, args.data_path, args.games, args.workers, args.depth)
+    gen_data(args.stockfish_bin, args.data_path, args.games, args.workers)
 
 
 if __name__ == "__main__":

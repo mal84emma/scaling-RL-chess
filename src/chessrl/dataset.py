@@ -67,8 +67,12 @@ class DatasetGame(object):
         union_games = dataset_existent.games + self.games
 
         games = [x.get_history() for x in union_games]
+
+        dstr = json.dumps(games)
+        dstr = dstr.replace('},', '},\n')
+
         with open(path, 'w') as f:
-            json.dump(games, f)
+            f.write(dstr)
 
     def append(self, other):
         """ Appends a game (or another Dataset) to this one"""

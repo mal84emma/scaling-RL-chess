@@ -7,7 +7,7 @@ DatasetGame to a Model.
 import numpy as np
 import chess
 
-from tensorflow.keras.utils import Sequence, to_categorical
+from keras.utils import Sequence, to_categorical
 
 
 def _get_pieces_one_hot(board, color=False):

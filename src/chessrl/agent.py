@@ -3,6 +3,7 @@ import numpy as np
 import mctree
 import netencoder
 
+from game import Game
 from player import Player
 from model import ChessModel
 from dataset import DatasetGame
@@ -24,7 +25,7 @@ class Agent(Player):
         self.move_encodings = netencoder.get_uci_labels()
         self.uci_dict = {u: i for i, u in enumerate(self.move_encodings)}
 
-    def best_move(self, game:'Game', real_game=False, max_iters=900, verbose=False) -> str:  # noqa: E0602, F821
+    def best_move(self, game:Game, real_game=False, max_iters=900, verbose=False) -> str:  # noqa: E0602, F821
         """ Finds and returns the best possible move (UCI encoded)
 
         Parameters:
@@ -64,7 +65,7 @@ class Agent(Player):
     def train(self, dataset: DatasetGame,
               epochs=1, logdir=None, batch_size=1,
               validation_split=0):
-        """ Trains the model using previous recorded games """
+        """ Trains the model using previous recorded games."""
         if len(dataset) <= 0:
             return
 

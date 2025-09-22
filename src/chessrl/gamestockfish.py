@@ -10,7 +10,10 @@ class GameStockfish(Game):
                  player_color=Game.WHITE,
                  board=None,
                  date=None,
-                 stockfish_depth=10):
+                 stockfish_depth=10,
+                 stockfish_rand_depth=False,
+                 stockfish_quality=1.0,
+                 training_mode=False):
         super().__init__(board=board, player_color=player_color, date=date)
         if stockfish is None:
             raise ValueError('A Stockfish object or a path is needed.')
@@ -19,20 +22,25 @@ class GameStockfish(Game):
         stockfish_color = not self.player_color
 
         if type(stockfish) == str:
-            self.stockfish = Stockfish(stockfish_color, stockfish,
-                                       search_depth=stockfish_depth)
+            self.stockfish = Stockfish(stockfish_color,
+                                       stockfish,
+                                       search_depth=stockfish_depth,
+                                       rand_depth=stockfish_rand_depth,
+                                       move_quality=stockfish_quality,
+                                       training_mode=training_mode)
         elif type(stockfish) == Stockfish:
             self.stockfish = stockfish
 
     def move(self, movement):
         """ Makes a move. If it's not your turn, Stockfish will play and if
-    the move is illegal, it will be ignored.
+            the move is illegal, it will be ignored.
         Params:
             movement: str, Movement in UCI notation (f2f3, g8f6...)
         """
         # If stockfish moves first
         if self.stockfish.color and len(self.board.move_stack) == 0:
-            stockfish_best_move = self.stockfish.best_move(self)
+            first_move = True if self.stockfish.training_mode else False
+            stockfish_best_move = self.stockfish.best_move(self, first_move)
             self.board.push(chess.Move.from_uci(stockfish_best_move))
         else:
             made_movement = super().move(movement)
