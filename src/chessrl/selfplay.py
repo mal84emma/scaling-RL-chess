@@ -3,6 +3,7 @@ from agent import Agent
 from game import Game
 from predict_worker import PredictWorker
 from lib.logger import Logger
+from lib.model import get_model_path
 
 from dataset import DatasetGame
 from timeit import default_timer as timer
@@ -28,32 +29,6 @@ def process_initializer():
 
 
 #multiprocessing.set_start_method('spawn', force=True)
-
-
-def get_model_path(directory):
-    """ Finds all the .weights.h5 files (neural net weights) and returns the path to
-    the most trained version. If there are no models, returns a default model
-    name (model-0.weights.h5)
-
-    Parameters:
-        directory: str. Directory path in which the .weights.h5 files are contained
-
-    Returns:
-        path: str. Path to the file (directory+'/model-newest.weights.h5')
-    """
-
-    path = directory + "/model-0.weights.h5"
-
-    # Model name
-    models = [f for f in os.listdir(directory) if f.endswith("h5")]
-
-    if len(models) > 0:
-        # get greater version
-        max_v = max([m.split("-")[1] for m in models])
-        m = [model for model in models if model.endswith(max_v)][0]
-        path = directory + "/" + m
-
-    return path
 
 
 def play_game(agent):
@@ -105,7 +80,8 @@ def train_model_job(dataset_str, model_path, model_dir):
 
     chess_agent.train(data_train, logdir=model_dir, epochs=1,
                       validation_split=0, batch_size=1)
-    chess_agent.save(model_path)
+    new_model_path = get_model_path(model_dir, increment=True)
+    chess_agent.save(new_model_path)
 
 
 def main():
