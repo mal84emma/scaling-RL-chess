@@ -8,8 +8,14 @@ from keras.layers import (Dense, Conv2D, BatchNormalization,
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, categorical_crossentropy
 from keras import Model
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, EarlyStopping, LearningRateScheduler, BackupAndRestore
 from keras import backend as K
+
+
+def lr_scheduler(epoch, lr):
+    if epoch > 1:
+        return lr*0.9
+    return lr
 
 
 class ChessModel(object):
@@ -94,6 +100,12 @@ class ChessModel(object):
                                                write_graph=False,
                                                update_freq=1)
             callbacks.append(tensorboard_callback)
+
+        callbacks.append(EarlyStopping(monitor='val_loss',
+                                       patience=3,
+                                       restore_best_weights=True))
+        #callbacks.append(LearningRateScheduler(lr_scheduler, verbose=1))
+        callbacks.append(BackupAndRestore(backup_dir='../../data/models/train_backup'))
 
         self.model.fit(generator,
                         epochs=epochs,
