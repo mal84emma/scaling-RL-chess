@@ -2,6 +2,7 @@ import chess
 import chess.svg
 import cairosvg
 
+import numpy as np
 from io import BytesIO
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -110,7 +111,7 @@ class Game(object):
     def __len__(self):
         return len(self.board.move_stack)
 
-    def plot_board(self, save_path=None):
+    def plot_board(self, return_img=False, show_moves=True, save_path=None):
         """ Plots the current state of the board. This is useful for debug/log
         purposes while working outside a notebook
 
@@ -118,17 +119,20 @@ class Game(object):
             save_path: str, where to save the image. None if you want to plot
             on the screen only
         """
-        svg = chess.svg.board(self.board)
+
+        if show_moves:
+            prev_moves = [x.uci() for x in self.board.move_stack[-2:]]
+            arrows = [chess.svg.Arrow.from_pgn(x[:4]) for x in prev_moves]
+        else:
+            arrows = []
+
+        svg = chess.svg.board(self.board, orientation=self.player_color, arrows=arrows)
+
         out = BytesIO()
         cairosvg.svg2png(svg, write_to=out)
         image = Image.open(out)
-        if save_path is None:
-            plt.ion()
-            with plt.style.context("seaborn-dark"):
-                fig, ax = plt.subplots(num="game")
-                ax.imshow(image)
-                ax.axis('off')
-                plt.draw()
-                # plt.show()
-        else:
+
+        if return_img:
+            return np.asarray(image)
+        if save_path is not None:
             image.save(save_path)

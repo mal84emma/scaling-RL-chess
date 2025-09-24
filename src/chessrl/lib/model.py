@@ -18,11 +18,10 @@ def get_model_path(directory, increment=False):
 
     if len(models) > 0:
         max_v = int(max([m.split("-")[1].split(".")[0] for m in models]))
+        if increment:
+            max_v += 1
     else:
         max_v = 0
-
-    if increment:
-        max_v += 1
 
     path = os.path.join(directory, f"model-{max_v}.weights.h5")
 
