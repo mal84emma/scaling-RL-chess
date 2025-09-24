@@ -32,14 +32,14 @@ class GameAgent(Game):
         made_movement = False
         # If agent moves first (whites and first move)
         if self.agent.color and len(self.board.move_stack) == 0:
-            agents_best_move = self.agent.best_move(self, real_game=True)
-            self.board.push(chess.Move.from_uci(agents_best_move))
+            agents_move = self.agent.get_move(self, real_game=True)
+            self.board.push(chess.Move.from_uci(agents_move))
             made_movement = True
         else:
             made_movement = super().move(movement)
             if made_movement and self.get_result() is None:
-                agents_best_move = self.agent.best_move(self, real_game=True)
-                self.board.push(chess.Move.from_uci(agents_best_move))
+                agents_move = self.agent.get_move(self, real_game=True)
+                self.board.push(chess.Move.from_uci(agents_move))
         return made_movement
 
     def get_copy(self):

@@ -25,7 +25,7 @@ class Agent(Player):
         self.move_encodings = netencoder.get_uci_labels()
         self.uci_dict = {u: i for i, u in enumerate(self.move_encodings)}
 
-    def best_move(self, game:Game, real_game=False, max_iters=900, verbose=False) -> str:  # noqa: E0602, F821
+    def get_move(self, game:Game, real_game=False, max_iters=900, verbose=False) -> str:  # noqa: E0602, F821
         """ Finds and returns the best possible move (UCI encoded)
 
         Parameters:
@@ -38,22 +38,22 @@ class Agent(Player):
         Returns:
             str. UCI encoded movement.
         """
-        best_move = '00000'  # Null move
+        move = '00000'  # Null move
         if real_game:
             policy = self.predict_policy(game)
-            best_move = game.get_legal_moves()[np.argmax(policy)]
+            move = game.get_legal_moves()[np.argmax(policy)]
         else:
             if game.get_result() is None:
                 current_tree = mctree.Tree(game)
-                best_move = current_tree.search_move(self, max_iters=max_iters, verbose=verbose)
-        return best_move
+                move = current_tree.search_move(self, max_iters=max_iters, verbose=verbose)
+        return move
 
-    def predict_outcome(self, game:'Game') -> float:  # noqa: E0602, F821
+    def predict_outcome(self, game:Game) -> float:  # noqa: E0602, F821
         """ Predicts the outcome of a game from the current position """
         game_matr = netencoder.get_game_state(game)
         return self.model.predict(np.expand_dims(game_matr, axis=0))[1][0][0]
 
-    def predict_policy(self, game:'Game', mask_legal_moves=True) -> float:  # noqa: E0602, F821
+    def predict_policy(self, game:Game, mask_legal_moves=True) -> float:  # noqa: E0602, F821
         """ Predict the policy distribution over all possible moves. """
         game_matr = netencoder.get_game_state(game)
         policy = self.model.predict(np.expand_dims(game_matr, axis=0))[0][0]

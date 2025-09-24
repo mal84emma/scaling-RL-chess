@@ -36,7 +36,7 @@ def playout_and_save_game(
     # play game
     try:
         while tmp_game.get_result() is None:
-            agent_move = agent.best_move(tmp_game, real_game=True)
+            agent_move = agent.get_move(tmp_game, real_game=True)
             tmp_game.move(agent_move)
 
     except Exception:
@@ -65,24 +65,24 @@ class TTAgent(Agent):
         self.tt_games = tt_games
         self.ttt_iters = ttt_iters
 
-    def best_move(self, game:Game, real_game=True, verbose=False) -> str:
+    def get_move(self, game:Game, real_game=True, verbose=False) -> str:
         """Perform iterations of predicting games and fine-tuning
         the agent before selecting a move."""
 
         logger = Logger.get_instance()
         timer_start = timer()
 
-        best_move = '00000'  # Null move
+        move = '00000'  # Null move
 
         tmp_agent = self.predict_and_tune(game)
         policy = tmp_agent.predict_policy(game)
-        best_move = game.get_legal_moves()[np.argmax(policy)]
+        move = game.get_legal_moves()[np.argmax(policy)]
 
         timer_end = timer()
         del tmp_agent
-        logger.info(f"### TTMP agent made move {best_move} in {round(timer_end-timer_start, 2)}s.\n")
+        logger.info(f"### TTMP agent made move {move} in {round(timer_end-timer_start, 2)}s.\n")
 
-        return best_move
+        return move
 
     def predict_and_tune(self, game:Game) -> Agent:
 

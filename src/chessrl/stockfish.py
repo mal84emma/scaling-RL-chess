@@ -10,6 +10,10 @@ from game import Game
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
+
 class Stockfish(Player):
     """ AI using Stockfish to play a game of chess."""
 
@@ -18,62 +22,45 @@ class Stockfish(Player):
                  binary_path: str,
                  thinking_time=0.01,
                  search_depth=10,
-                 rand_depth=False,
-                 move_quality=1.0,
-                 training_mode=False
+                 elo=1320
                 ):
         super().__init__(color)
+
         self.engine = chess.engine.SimpleEngine.popen_uci(binary_path)
+        #print(list(self.engine.options))
+        self.engine.configure({"UCI_Elo": elo})
+        # page below discusses effect of Stockfish level on Elo rating
+        # https://chess.stackexchange.com/questions/29860/is-there-a-list-of-approximate-elo-ratings-for-each-stockfish-level
 
         self.thinking_time = thinking_time
         self.search_depth = search_depth
-        self.rand_depth = rand_depth
-        self.move_quality = move_quality
-        self.training_mode = training_mode
+        self.elo = elo
 
-    def best_move(self, game: Game, first_move: bool = False):  # noqa: E0602, F821
-        # Page 77 of
-        # http://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf
-        # gives some study about the relation of search depth vs ELO.
+    def get_move(self, game: Game):
 
-        # this feature is alright, but depth doesn't have much affect on move choice
-        if self.rand_depth and self.search_depth > 1:
-            depth = random.randint(1, self.search_depth+1)
-        else:
-            depth = self.search_depth
+        result = self.engine.play(game.board,
+                                  chess.engine.Limit(time=self.thinking_time,
+                                                     depth=self.search_depth)
+                                  )
+        move = result.move.uci()
 
-        # legacy - only returns best move within compute limit
-        # result = self.engine.play(game.board,
-        #                           #chess.engine.Limit(time=self.thinking_time)
-        #                           chess.engine.Limit(depth=depth)
-        #                           )
-        # return result.move.uci()
-
-        # to introduce stochasticity to how stockfish plays, we analyse
-        # the position and generate the best 20 moves, from which we
-        # pick according to a distribution (depending on mode)
-
+        # add a bit of stochasticity to Stockfish's move choice, select move
+        # either one better or one worse than given elo choice randomly
         variations = self.engine.analyse(game.board,
-                                         chess.engine.Limit(depth=depth),
-                                         multipv=20)
+                                         chess.engine.Limit(time=self.thinking_time,
+                                                     depth=self.search_depth),
+                                         multipv=50)
+        move_variations = [v['pv'][0].uci() for v in variations]
 
-        # for training data generation, skew randomness to good moves
-        if self.training_mode:
-            if first_move: # add more entropy to first move
-                var_dist = [0,1,2,3,4,5]
-            else:
-                var_dist = [0]*10 + [1]*5 + [2]*3 + [3]*1 + [4]*1
+        if move in move_variations:
+            move_index = move_variations.index(move)
+            if random.random() <= 0.5:
+                increment = random.choice([-1, 1])
+                move_index = clamp(move_index + increment, 0, len(move_variations)-1)
+                print('old move:', move, 'new move:', move_variations[move_index])
+                move = move_variations[move_index]
 
-            var_num = random.choice(var_dist)
-
-        else:
-            var_num = int(len(variations)*(1-self.move_quality))
-            # move_quality needs to be a fractional, otherwise when there are few
-            # variations it always picks the worst move and the game stalls
-
-        var_num = min(var_num, len(variations)-1)
-
-        return variations[var_num]['pv'][0].uci()
+        return move
 
     def kill(self):
         self.engine.quit()

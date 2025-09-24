@@ -11,9 +11,7 @@ class GameStockfish(Game):
                  board=None,
                  date=None,
                  stockfish_depth=10,
-                 stockfish_rand_depth=False,
-                 stockfish_quality=1.0,
-                 training_mode=False):
+                 stockfish_elo=1320):
         super().__init__(board=board, player_color=player_color, date=date)
         if stockfish is None:
             raise ValueError('A Stockfish object or a path is needed.')
@@ -25,9 +23,7 @@ class GameStockfish(Game):
             self.stockfish = Stockfish(stockfish_color,
                                        stockfish,
                                        search_depth=stockfish_depth,
-                                       rand_depth=stockfish_rand_depth,
-                                       move_quality=stockfish_quality,
-                                       training_mode=training_mode)
+                                       elo=stockfish_elo)
         elif type(stockfish) == Stockfish:
             self.stockfish = stockfish
 
@@ -39,14 +35,13 @@ class GameStockfish(Game):
         """
         # If stockfish moves first
         if self.stockfish.color and len(self.board.move_stack) == 0:
-            first_move = True if self.stockfish.training_mode else False
-            stockfish_best_move = self.stockfish.best_move(self, first_move)
-            self.board.push(chess.Move.from_uci(stockfish_best_move))
+            stockfish_move = self.stockfish.get_move(self)
+            self.board.push(chess.Move.from_uci(stockfish_move))
         else:
             made_movement = super().move(movement)
             if made_movement and self.get_result() is None:
-                stockfish_best_move = self.stockfish.best_move(self)
-                self.board.push(chess.Move.from_uci(stockfish_best_move))
+                stockfish_move = self.stockfish.get_move(self)
+                self.board.push(chess.Move.from_uci(stockfish_move))
 
     def get_copy(self):
         return GameStockfish(board=self.board.copy(), stockfish=self.stockfish)

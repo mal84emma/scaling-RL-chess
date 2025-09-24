@@ -6,6 +6,9 @@ DatasetGame to a Model.
 
 import numpy as np
 import chess
+from game import Game
+from dataset import DatasetGame
+
 
 from keras.utils import Sequence, to_categorical
 
@@ -149,7 +152,7 @@ class DataGameSequence(Sequence):
                         be flipped 180 degrees.
     """
 
-    def __init__(self, dataset: 'DatasetGame', batch_size: int = 8,  # noqa:F821
+    def __init__(self, dataset: DatasetGame, batch_size: int = 8,  # noqa:F821
                  random_flips=0):
         self.dataset = dataset
         self.batch_size = min(batch_size, len(dataset))

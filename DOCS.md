@@ -49,7 +49,7 @@ This is the base class to represent a player. This may not be used, it's purpose
 
 This class represents an AI which uses a neural network as the backend. On creation, a Tensorflow graph will be created and initialized with the trained weights of a model (if any). Because of this (if you don't have much GPU memory) if you plan to have several instances playing at once I would recommend using the `AgentDistributed` class or firing up each instance on a separate process. This class is practical as is easy to instantiate for a single-process workflow (for example, playing agaisnt one on a web client).
 
-The most important method for the user of this is `best_move()` which will return the best next possible move (UCI encoded).
+The most important method for the user of this is `get_move()` which will return the best next possible move (UCI encoded).
 
 ### AgentDistributed
 

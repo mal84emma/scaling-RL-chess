@@ -35,7 +35,7 @@ def process_initializer():
     tf.keras.backend.clear_session()
 
 
-def play_game_job(id: int, model_path, stockfish_depth, stockfish_quality=1.0,
+def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
                   log=False, use_ttmp=False, plot=False, delay=0.5):
     """ Plays a game and returns the result..
 
@@ -52,7 +52,7 @@ def play_game_job(id: int, model_path, stockfish_depth, stockfish_quality=1.0,
     game_env = GameStockfish(player_color=agent_is_white,
                              stockfish='../../res/stockfish-17-macos-m1-apple-silicon',
                              stockfish_depth=stockfish_depth,
-                             stockfish_quality=stockfish_quality)
+                             stockfish_elo=stockfish_elo)
 
     try:
         agent_type = Agent if not use_ttmp else TTAgent
@@ -80,7 +80,7 @@ def play_game_job(id: int, model_path, stockfish_depth, stockfish_quality=1.0,
 
         while game_env.get_result() is None:
 
-            agent_move = chess_agent.best_move(game_env, real_game=True)
+            agent_move = chess_agent.get_move(game_env, real_game=True)
             game_env.move(agent_move)
 
             if plot:
@@ -105,8 +105,7 @@ def benchmark(
         model_dir,
         workers=1,
         games=10,
-        stockfish_depth=5,
-        stockfish_quality=1.0,
+        stockfish_elo=1320,
         log=False,
         plot=True,
         delay=0.5,
@@ -136,14 +135,17 @@ def benchmark(
             results = []
             for i in range(games):
                 results.append(executor.submit(play_game_job, *[i,
-                                                                model_path,
-                                                                stockfish_depth]))
+                                                                model_path]))
         results = [r.result() for r in results]
 
     else:
-        results = [play_game_job(i, model_path, 
-                                 stockfish_depth, stockfish_quality,
-                                 log, use_ttmp, plot=plot, delay=delay)\
+        results = [play_game_job(i,
+                                 model_path, 
+                                 stockfish_elo=stockfish_elo,
+                                 log=log,
+                                 use_ttmp=use_ttmp,
+                                 plot=plot,
+                                 delay=delay)\
                                     for i in tqdm(range(games), desc="Games played")]
 
     if log:
@@ -180,8 +182,8 @@ if __name__ == "__main__":
     benchmark(args.model_dir, workers=2, log=True,
               plot=args.plot, delay=args.delay,
               distributed=False, use_ttmp=False,
-              stockfish_depth=5, games=10,
-              stockfish_quality=0.75)
+              games=10,
+              stockfish_elo=1320)
     # see page 77 of https://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf
     # for comparison between stockfish depth and Elo rating
     # note: I've put in random stockfish depth just to make the games different

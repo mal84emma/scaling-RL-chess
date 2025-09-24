@@ -4,6 +4,7 @@ import mctree
 import netencoder
 
 from player import Player
+from game import Game
 
 from multiprocessing.connection import Client
 
@@ -36,7 +37,7 @@ class AgentDistributed(Player):
         self.address = endpoint
         self.num_threads = num_threads
 
-    def best_move(self, game:'Game', real_game=False, max_iters=900,  # noqa: E0602, F821
+    def get_move(self, game:Game, real_game=False, max_iters=900,  # noqa: E0602, F821
                   ai_move=True, verbose=False) -> str:
         """ Finds and returns the best possible move (UCI encoded)
 
@@ -52,27 +53,27 @@ class AgentDistributed(Player):
         Returns:
             str. UCI encoded movement.
         """
-        best_move = '00000'  # Null move
+        move = '00000'  # Null move
         if real_game:
             policy = self.predict_policy(game)
-            best_move = game.get_legal_moves()[np.argmax(policy)]
+            move = game.get_legal_moves()[np.argmax(policy)]
         else:
             if game.get_result() is None:
                 current_tree = mctree.SelfPlayTree(
                     game,
                     threads=self.num_threads)
-                best_move = current_tree.search_move(self, max_iters=max_iters,
+                move = current_tree.search_move(self, max_iters=max_iters,
                                                      verbose=verbose,
                                                      ai_move=ai_move)
 
-        return best_move
+        return move
 
-    def predict_outcome(self, game:'Game') -> float:  # noqa: E0602, F821
+    def predict_outcome(self, game:Game) -> float:  # noqa: E0602, F821
         """ Predicts the outcome of a game from the current position """
         response = self.__send_game(game)
         return response[1]
 
-    def predict_policy(self, game:'Game', mask_legal_moves=True) -> float:  # noqa: E0602, F821
+    def predict_policy(self, game:Game, mask_legal_moves=True) -> float:  # noqa: E0602, F821
         """ Predict the policy distribution over all possible moves. """
         response = self.__send_game(game)
         policy = response[0]
@@ -82,12 +83,12 @@ class AgentDistributed(Player):
             policy = [policy[self.uci_dict[x]] for x in legal_moves]
         return policy
 
-    def predict(self, game:'Game'):  # noqa: E0602, F821
+    def predict(self, game:Game):  # noqa: E0602, F821
         """ Predicts from a game board and returns policy / value"""
         response = self.__send_game(game)
         return response
 
-    def __send_game(self, game:'Game'):  # noqa: E0602, F821
+    def __send_game(self, game:Game):  # noqa: E0602, F821
         """ Sends a game to the neural net. and blocks the caller thread until
         the prediction is done.
 

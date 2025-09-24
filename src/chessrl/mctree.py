@@ -25,7 +25,7 @@ class Node(object):
         prior: float.
     """
 
-    def __init__(self, state: 'Game', parent=None):
+    def __init__(self, state: Game, parent=None):
         self.state = state
         self.children = []
         self.unexpanded_actions = state.get_legal_moves()
@@ -242,7 +242,7 @@ class SelfPlayTree(Tree):
         new_state.move(node.pop_unexpanded_action())
         # Move oponent
         if new_state.get_result() is None:
-            bm = agent.best_move(new_state, real_game=True)
+            bm = agent.get_move(new_state, real_game=True)
             new_state.move(bm)
 
         new_child = Node(new_state, parent=node)

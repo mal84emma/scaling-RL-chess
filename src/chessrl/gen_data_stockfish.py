@@ -15,17 +15,16 @@ def play_game(stockfish_bin, dataset, depth=10, tqbar=None):
 
     g = GameStockfish(stockfish=stockfish_bin,
                       player_color=is_white,
-                      stockfish_depth=depth,
-                      training_mode=True)
-    stockf = Stockfish(is_white, stockfish_bin, depth, training_mode=True)
+                      stockfish_depth=depth)
+    stockf = Stockfish(is_white, stockfish_bin, depth)
 
     # first move
-    bm = stockf.best_move(g, first_move=True)
+    bm = stockf.get_move(g, first_move=True)
     g.move(bm)
 
     # play out game
     while g.get_result() is None:
-        bm = stockf.best_move(g)
+        bm = stockf.get_move(g)
         g.move(bm)
 
     dataset.append(g)
@@ -41,6 +40,8 @@ def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
     logger = Logger.get_instance()
     d = DatasetGame()
     pbar = tqdm(total=num_games)
+
+    # TODO: add sampling of ELOs to make games different
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         for _ in range(num_games):
@@ -62,15 +63,8 @@ def main():
                         help="Path of .JSON dataset.")
     parser.add_argument('--games', metavar='games', type=int,
                         default=10)
-    parser.add_argument('--depth', metavar='depth', type=int,
-                        default=10, help="Stockfish tree depth.")
     parser.add_argument('--workers', metavar='workers', type=int,
                         default=2, help="Number of workers for games.")
-    parser.add_argument('--random_depth',
-                        action='store_true',
-                        default=False,
-                        help="Use normal distribution of depths with "
-                        "mean --depth.") # legacy - random depth doesn't affect moves much
     parser.add_argument('--debug',
                         action='store_true',
                         default=False,

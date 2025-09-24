@@ -1,4 +1,5 @@
 import game
+from game import Game
 
 import json
 
