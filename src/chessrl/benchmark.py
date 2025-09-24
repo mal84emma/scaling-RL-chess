@@ -179,7 +179,7 @@ if __name__ == "__main__":
 
     benchmark(args.model_dir, workers=2, log=True,
               plot=args.plot, delay=args.delay,
-              distributed=False, use_ttmp=True,
+              distributed=False, use_ttmp=False,
               stockfish_depth=5, games=10,
               stockfish_quality=0.75)
     # see page 77 of https://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf
