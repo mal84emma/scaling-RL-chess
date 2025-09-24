@@ -36,13 +36,14 @@ class ChessModel(object):
         """
         inp = Input((8, 8, 127))
 
-        x = Conv2D(filters=256, kernel_size=3, strides=1, padding='same',
+        x = Conv2D(filters=256, kernel_size=3, strides=1, padding='same', # TODO: 'same' padding is suuuper strange
                    kernel_regularizer='l2')(inp)
 
         for i in range(10):
             x = self.__res_block(x)
 
-        # Policy Head
+        # Policy Head - potentially unnecessary complications
+        # alternatively could tree search over value function with given depth
         pol_head = Conv2D(filters=2, kernel_size=1, padding='valid',
                           strides=1,
                           kernel_regularizer='l2')(x)
@@ -54,6 +55,12 @@ class ChessModel(object):
                          name='policy_out')(pol_head)
 
         # Value Head
+        # this can be trained on Stockfish evaluation of position
+        # best to do for 'typical' games, either from Lichess or from
+        # simulated games with easier engines
+        # you don't need to learn all of chess, you just need to learn
+        # the positions that you are likely to encounter (Lichess has these
+        # with their stockfish scores)
         val_head = Conv2D(filters=1,
                           strides=1,
                           kernel_size=1, padding='valid',

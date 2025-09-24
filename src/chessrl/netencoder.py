@@ -39,6 +39,9 @@ def _get_current_game_state(board):
     Returns:
         current: numpy array. 3D Matrix with dimensions 14x8x8.
         """
+    # TODO: castling rights, en passant, 50 move rule, player turn etc? this isn't the full game state
+    # see chess programming wiki for ideas
+    # https://www.chessprogramming.org/Board_Representation#FEN_Board_Representation
     return np.concatenate((_get_pieces_one_hot(board, color=False),
                            _get_pieces_one_hot(board, color=True)),
                           axis=-1)
@@ -82,7 +85,7 @@ def get_game_state(game, flipped=False):
 
     board = game.board
     current = _get_current_game_state(board)
-    history = _get_game_history(board)
+    history = _get_game_history(board) # TODO: this is weird - why is there history in the board position input??
     current_turn = np.full((8, 8, 1), game.turn, dtype=float)  # Curr. turn
     current = np.concatenate((current, history, current_turn), axis=-1)
 
