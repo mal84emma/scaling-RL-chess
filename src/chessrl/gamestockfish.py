@@ -10,7 +10,7 @@ class GameStockfish(Game):
                  player_color=Game.WHITE,
                  board=None,
                  date=None,
-                 stockfish_depth=10,
+                 stockfish_depth=20,
                  stockfish_elo=1320):
         super().__init__(board=board, player_color=player_color, date=date)
         if stockfish is None:
@@ -34,7 +34,7 @@ class GameStockfish(Game):
             movement: str, Movement in UCI notation (f2f3, g8f6...)
         """
         # If stockfish moves first
-        if self.stockfish.color and len(self.board.move_stack) == 0:
+        if (self.stockfish.color == Game.WHITE) and (len(self.board.move_stack) == 0):
             stockfish_move = self.stockfish.get_move(self)
             self.board.push(chess.Move.from_uci(stockfish_move))
         else:
@@ -46,19 +46,25 @@ class GameStockfish(Game):
     def get_copy(self):
         return GameStockfish(board=self.board.copy(), stockfish=self.stockfish)
 
-    def tearup(self):
-        """ Free resources. This cannot be done in __del__ as the instances
-        will be intensivily cloned but maintaining the same stockfish AI
-        engine. We don't want it deleted. Should only be called on the end of
-        the program.
-        """
-        self.stockfish.kill()
-
-    def free(self):
-        """ Unlinks the game from the stockfish engine. """
-        self.stockfish = None
-
     def __del__(self):
-        #self.free()
-        #del(self.board)
-        pass
+        """ Destructor to ensure engine is properly closed."""
+        if hasattr(self, 'stockfish') and self.stockfish:
+            self.stockfish.close()
+
+    # NOTE: not sure what this nonsense is all about
+    ###
+    # def tearup(self):
+    #     """ Free resources. This cannot be done in __del__ as the instances
+    #     will be intensivily cloned but maintaining the same stockfish AI
+    #     engine. We don't want it deleted. Should only be called on the end of
+    #     the program.
+    #     """
+    #     self.stockfish.close()
+
+    # def free(self):
+    #     """ Unlinks the game from the stockfish engine. """
+    #     self.stockfish = None
+
+    # def __del__(self):
+    #     self.free()
+    #     del(self.board)

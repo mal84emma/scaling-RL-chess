@@ -5,8 +5,9 @@ and a summary of them is returned.
 
 from agent import Agent
 from ttmpt import TTAgent
-from gamestockfish import GameStockfish
 from game import Game
+from gamestockfish import GameStockfish
+from scorerstockfish import ScorerStockfish
 from timeit import default_timer as timer
 import argparse
 from lib.logger import Logger
@@ -36,7 +37,7 @@ def process_initializer():
     tf.keras.backend.clear_session()
 
 
-def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
+def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
                   log=False, use_ttmp=False, plot=False, delay=0.5):
     """ Plays a game and returns the result..
 
@@ -63,13 +64,17 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
         return None
 
     if log:
-        logger.info(f"Starting game {id}: Agent is {'white' if agent_is_white else 'black'}")
+        agent_color = 'White' if agent_is_white else 'Black'
+        logger.info(f"Starting game {id}: Agent is {agent_color}")
 
     if plot:
+        scorer = ScorerStockfish(binary_path='../../res/stockfish-17-macos-m1-apple-silicon')
+
         fig,ax = plt.subplots(1,1)
         img = game_env.plot_board(return_img=True, show_moves=False)
         im = ax.imshow(img)
         ax.axis('off')
+        ax.set_title(f"({agent_color}) ...")
         plt.tight_layout()
         plt.pause(delay)
 
@@ -79,16 +84,22 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
         if not agent_is_white:
             game_env.move(Game.NULL_MOVE) # make stockfish take first move
 
+
         while game_env.get_result() is None:
 
+            if plot: # draw board
+                im.set_data(game_env.plot_board(return_img=True, show_moves=True))
+                scores = scorer.score_position(game_env)
+                ax.set_title(f"({agent_color}) CP: {scores['cp']}, rate: {scores['rate']*100:.1f}%")
+                fig.canvas.draw_idle()
+                plt.pause(delay)
+
+            # make moves
             agent_move = chess_agent.get_move(game_env, real_game=True)
             game_env.move(agent_move)
 
-            if plot:
-                im.set_data(game_env.plot_board(return_img=True, show_moves=True))
-                fig.canvas.draw_idle()
-                plt.pause(delay)
         timer_end = timer()
+
 
         if log:
             logger.info(f"Game {id} done. Result: {game_env.get_result()}. "
@@ -97,8 +108,9 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
         logger.error(traceback.format_exc())
 
     res = {'color': agent_is_white, 'result': game_env.get_result()}
-    game_env.tearup()
+    #game_env.tearup()
     if plot: plt.close(fig)
+
     return res
 
 

@@ -64,7 +64,7 @@ class Stockfish(Player):
         """Close the engine connection to free resources."""
         if hasattr(self, 'engine') and self.engine:
             self.engine.quit()
-    
+
     def __del__(self):
         """Destructor to ensure engine is properly closed."""
         self.close()
