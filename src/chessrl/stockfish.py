@@ -1,5 +1,6 @@
 import chess
 import chess.engine
+from chess.engine import SimpleEngine, Limit
 import logging
 
 import random
@@ -20,35 +21,33 @@ class Stockfish(Player):
     def __init__(self,
                  color: bool,
                  binary_path: str,
-                 thinking_time=0.01,
-                 search_depth=10,
+                 thinking_time=0.1,
+                 search_depth=20,
                  elo=1320
                 ):
         super().__init__(color)
 
-        self.engine = chess.engine.SimpleEngine.popen_uci(binary_path)
+        self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         #print(list(self.engine.options))
+        self.limit: Limit = Limit(time=thinking_time,depth=search_depth)
         self.engine.configure({"UCI_Elo": elo})
         # page below discusses effect of Stockfish level on Elo rating
         # https://chess.stackexchange.com/questions/29860/is-there-a-list-of-approximate-elo-ratings-for-each-stockfish-level
 
-        self.thinking_time = thinking_time
-        self.search_depth = search_depth
         self.elo = elo
 
     def get_move(self, game: Game):
 
-        result = self.engine.play(game.board,
-                                  chess.engine.Limit(time=self.thinking_time,
-                                                     depth=self.search_depth)
-                                  )
+        assert game.board.turn == self.color, \
+            "It's not Stockfish's turn to play."
+
+        result = self.engine.play(game.board, self.limit)
         move = result.move.uci()
 
         # add a bit of stochasticity to Stockfish's move choice, select move
         # either one better or one worse than given elo choice randomly
         variations = self.engine.analyse(game.board,
-                                         chess.engine.Limit(time=self.thinking_time,
-                                                     depth=self.search_depth),
+                                         self.limit,
                                          multipv=50)
         move_variations = [v['pv'][0].uci() for v in variations]
 
@@ -57,10 +56,15 @@ class Stockfish(Player):
             if random.random() <= 0.5:
                 increment = random.choice([-1, 1])
                 move_index = clamp(move_index + increment, 0, len(move_variations)-1)
-                print('old move:', move, 'new move:', move_variations[move_index])
                 move = move_variations[move_index]
 
         return move
 
-    def kill(self):
-        self.engine.quit()
+    def close(self):
+        """Close the engine connection to free resources."""
+        if hasattr(self, 'engine') and self.engine:
+            self.engine.quit()
+    
+    def __del__(self):
+        """Destructor to ensure engine is properly closed."""
+        self.close()
