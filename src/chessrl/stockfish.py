@@ -22,7 +22,7 @@ class Stockfish(Player):
                  color: bool,
                  binary_path: str,
                  thinking_time=0.1,
-                 search_depth=20,
+                 search_depth=10,
                  elo=1320
                 ):
         super().__init__(color)
@@ -30,7 +30,7 @@ class Stockfish(Player):
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         #print(list(self.engine.options))
         self.limit: Limit = Limit(time=thinking_time,depth=search_depth)
-        self.engine.configure({"UCI_Elo": elo})
+        self.engine.configure({"UCI_LimitStrength": True, "UCI_Elo": elo})
         # page below discusses effect of Stockfish level on Elo rating
         # https://chess.stackexchange.com/questions/29860/is-there-a-list-of-approximate-elo-ratings-for-each-stockfish-level
 
@@ -41,7 +41,7 @@ class Stockfish(Player):
         assert game.board.turn == self.color, \
             "It's not Stockfish's turn to play."
 
-        result = self.engine.play(game.board, self.limit)
+        result = self.engine.play(game.board, self.limit, options={"UCI_Elo": self.elo})
         move = result.move.uci()
 
         # add a bit of stochasticity to Stockfish's move choice, select move
@@ -61,10 +61,11 @@ class Stockfish(Player):
         return move
 
     def close(self):
-        """Close the engine connection to free resources."""
+        """Close the connection to the engine. This needs to be done
+        explicitly for each engine, otherwise the engine process will
+        remain active, and the program can hang due to an async lock.
+        The descturctor is not guaranteed to clean up the engine at
+        the right time."""
         if hasattr(self, 'engine') and self.engine:
             self.engine.quit()
 
-    def __del__(self):
-        """Destructor to ensure engine is properly closed."""
-        self.close()

@@ -54,10 +54,10 @@ class ScorerStockfish(Scorer):
         return {'cp': cp_score, 'rate': score_rate}
 
     def close(self):
-        """Close the engine connection to free resources."""
+        """Close the connection to the engine. This needs to be done
+        explicitly for each engine, otherwise the engine process will
+        remain active, and the program can hang due to an async lock.
+        The descturctor is not guaranteed to clean up the engine at
+        the right time."""
         if hasattr(self, 'engine') and self.engine:
             self.engine.quit()
-
-    def __del__(self):
-        """Destructor to ensure engine is properly closed."""
-        self.close()

@@ -29,7 +29,7 @@ def playout_and_save_game(
             board=starting_game.board.copy(),
             player_color=starting_game.player_color,
             stockfish=stockfish_bin,
-            stockfish_depth=5,
+            stockfish_depth=10,
             stockfish_rand_depth=True
         )
 
@@ -43,7 +43,8 @@ def playout_and_save_game(
         logger.error(traceback.format_exc())
 
     dataset.append(tmp_game)
-    tmp_game.tearup()
+    tmp_game.close()
+    # will also need to close the scorer object (if stockfish is used there)
 
     return dataset
 

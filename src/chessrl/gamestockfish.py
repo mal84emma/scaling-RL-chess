@@ -10,7 +10,7 @@ class GameStockfish(Game):
                  player_color=Game.WHITE,
                  board=None,
                  date=None,
-                 stockfish_depth=20,
+                 stockfish_depth=10,
                  stockfish_elo=1320):
         super().__init__(board=board, player_color=player_color, date=date)
         if stockfish is None:
@@ -46,25 +46,12 @@ class GameStockfish(Game):
     def get_copy(self):
         return GameStockfish(board=self.board.copy(), stockfish=self.stockfish)
 
-    def __del__(self):
-        """ Destructor to ensure engine is properly closed."""
+    def close(self):
+        """ Close the connection to the engine. This needs to be done
+        explicitly for each engine, otherwise the engine process will
+        remain active, and the program can hang due to an async lock.
+        The descturctor is not guaranteed to clean up the engine at
+        the right time.
+        """
         if hasattr(self, 'stockfish') and self.stockfish:
             self.stockfish.close()
-
-    # NOTE: not sure what this nonsense is all about
-    ###
-    # def tearup(self):
-    #     """ Free resources. This cannot be done in __del__ as the instances
-    #     will be intensivily cloned but maintaining the same stockfish AI
-    #     engine. We don't want it deleted. Should only be called on the end of
-    #     the program.
-    #     """
-    #     self.stockfish.close()
-
-    # def free(self):
-    #     """ Unlinks the game from the stockfish engine. """
-    #     self.stockfish = None
-
-    # def __del__(self):
-    #     self.free()
-    #     del(self.board)

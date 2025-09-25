@@ -10,18 +10,19 @@ import argparse
 import numpy as np
 
 
-def play_game(stockfish_bin, dataset, depth=10, tqbar=None):
+def play_game(stockfish_bin, dataset, depth=20, tqbar=None):
+
+    # TODO: add sampling of ELOs to make games different
 
     is_white = Game.WHITE if np.random.random() <= .5 else Game.BLACK
 
     g = GameStockfish(stockfish=stockfish_bin,
-                      player_color=is_white,
-                      stockfish_depth=depth)
-    stockf = Stockfish(is_white, stockfish_bin, depth)
+                      player_color=is_white)
+    stockf = Stockfish(is_white, stockfish_bin)
 
-    # first move
-    bm = stockf.get_move(g, first_move=True)
-    g.move(bm)
+    # get game Stockfish to play first if it's white
+    if not is_white == Game.WHITE:
+        g.move(Game.NULL_MOVE)
 
     # play out game
     while g.get_result() is None:
@@ -33,8 +34,8 @@ def play_game(stockfish_bin, dataset, depth=10, tqbar=None):
         tqbar.update(1)
 
     # Kill stockfish processes
-    g.tearup()
-    stockf.kill()
+    g.close()
+    stockf.close()
 
 
 def gen_data(stockfish_bin, save_path, num_games=100, workers=2):

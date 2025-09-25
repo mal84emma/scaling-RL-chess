@@ -37,7 +37,7 @@ def process_initializer():
     tf.keras.backend.clear_session()
 
 
-def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
+def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
                   log=False, use_ttmp=False, plot=False, delay=0.5):
     """ Plays a game and returns the result..
 
@@ -47,6 +47,7 @@ def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
         a fresh one.
         stockfish_depth: int. Difficulty of stockfish.
     """
+
     logger = Logger.get_instance()
 
     agent_is_white = Game.WHITE if random.random() <= .5 else Game.BLACK
@@ -58,7 +59,11 @@ def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
 
     try:
         agent_type = Agent if not use_ttmp else TTAgent
-        chess_agent = agent_type(color=agent_is_white, weights_path=model_path)
+        #chess_agent = agent_type(color=agent_is_white, weights_path=model_path)
+        from stockfish import Stockfish
+        chess_agent = Stockfish(color=agent_is_white,
+                                binary_path='../../res/stockfish-17-macos-m1-apple-silicon',
+                                elo=1600)
     except OSError:
         logger.error("Model not found. Exiting.")
         return None
@@ -95,7 +100,7 @@ def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
                 plt.pause(delay)
 
             # make moves
-            agent_move = chess_agent.get_move(game_env, real_game=True)
+            agent_move = chess_agent.get_move(game_env) # , real_game=True
             game_env.move(agent_move)
 
         timer_end = timer()
@@ -108,8 +113,13 @@ def play_game_job(id: int, model_path, stockfish_depth=20, stockfish_elo=1320,
         logger.error(traceback.format_exc())
 
     res = {'color': agent_is_white, 'result': game_env.get_result()}
-    #game_env.tearup()
-    if plot: plt.close(fig)
+
+    # close out engine instances
+    game_env.close()
+    chess_agent.close()
+    if plot:
+        scorer.close()
+        plt.close(fig)
 
     return res
 
@@ -120,7 +130,7 @@ def benchmark(
         games=10,
         stockfish_elo=1320,
         log=False,
-        plot=True,
+        plot=False,
         delay=0.5,
         distributed=False,
         use_ttmp=False
@@ -185,8 +195,9 @@ if __name__ == "__main__":
     parser.add_argument('model_dir', metavar='modeldir',
                         help="where to store (and load from)"
                         "the trained model and the logs")
-    parser.add_argument('--plot', metavar='plot', type=bool,
-                        default=True)
+    parser.add_argument('--plot',
+                        action='store_true',
+                        default=False)
     parser.add_argument('--delay', metavar='delay', type=float,
                         default=0.5)
 
