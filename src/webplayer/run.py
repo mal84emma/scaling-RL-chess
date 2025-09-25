@@ -22,6 +22,7 @@ gpu_initializer()
 
 
 import gamewrapper  # noqa:E402
+from game import Game  # noqa:E402
 
 # Default IP
 IP_ENDPOINT = 'localhost'
@@ -55,16 +56,16 @@ def get_game_state():
 
 @app.route("/game/<color>", methods=['PUT'])
 def change_color(color):
-    whites = True
+    whites = Game.WHITE
     if color == "0":
-        whites = False
+        whites = Game.BLACK
     gamewrapper.GameWrapper.destroy_instance()
 
     g = gamewrapper.GameWrapper.get_instance(player_color=whites,
                                              agent_path=AGENT_PATH)
     # The user is blacks, so we force the game start by pushing a null move
-    if not whites:
-        g.move('null move')
+    if whites is Game.BLACK:
+        g.move(Game.NULL_MOVE)
 
     return "Changed", 200
 

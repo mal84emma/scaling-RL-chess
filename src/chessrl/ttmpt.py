@@ -72,7 +72,7 @@ class TTAgent(Agent):
         logger = Logger.get_instance()
         timer_start = timer()
 
-        move = '00000'  # Null move
+        move = Game.NULL_MOVE
 
         tmp_agent = self.predict_and_tune(game)
         policy = tmp_agent.predict_policy(game)

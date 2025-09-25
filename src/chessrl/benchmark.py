@@ -6,6 +6,7 @@ and a summary of them is returned.
 from agent import Agent
 from ttmpt import TTAgent
 from gamestockfish import GameStockfish
+from game import Game
 from timeit import default_timer as timer
 import argparse
 from lib.logger import Logger
@@ -47,7 +48,7 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
     """
     logger = Logger.get_instance()
 
-    agent_is_white = True if random.random() <= .5 else False
+    agent_is_white = Game.WHITE if random.random() <= .5 else Game.BLACK
 
     game_env = GameStockfish(player_color=agent_is_white,
                              stockfish='../../res/stockfish-17-macos-m1-apple-silicon',
@@ -76,7 +77,7 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
         timer_start = timer()
 
         if not agent_is_white:
-            game_env.move('00000') # make stockfish take first move
+            game_env.move(Game.NULL_MOVE) # make stockfish take first move
 
         while game_env.get_result() is None:
 
@@ -151,8 +152,8 @@ def benchmark(
     if log:
         logger.debug("Calculating stats.")
     won = [1
-           if x['color'] is True and x['result'] == 1
-           or x['color'] is False and x['result'] == -1 else 0  # noqa:W503
+           if x['color'] is Game.WHITE and x['result'] == 1
+           or x['color'] is Game.BLACK and x['result'] == -1 else 0  # noqa:W503
            for x in results]
 
     if log:

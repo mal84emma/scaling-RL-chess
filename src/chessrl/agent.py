@@ -38,7 +38,7 @@ class Agent(Player):
         Returns:
             str. UCI encoded movement.
         """
-        move = '00000'  # Null move
+        move = Game.NULL_MOVE
         if real_game:
             policy = self.predict_policy(game)
             move = game.get_legal_moves()[np.argmax(policy)]

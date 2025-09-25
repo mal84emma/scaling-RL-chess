@@ -1,5 +1,6 @@
 from agent import Agent
 from dataset import DatasetGame
+from game import Game
 from lib.logger import Logger
 from lib.model import get_model_path
 
@@ -30,7 +31,7 @@ def train(model_dir, dataset_path, epochs=1, batch_size=8):
     model_path = get_model_path(model_dir)
 
     logger.info("Loading the agent...")
-    chess_agent = Agent(color=True)
+    chess_agent = Agent(color=Game.WHITE)
     try:
         chess_agent.load(model_path)
     except OSError:

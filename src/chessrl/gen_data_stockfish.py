@@ -1,6 +1,7 @@
 from gamestockfish import GameStockfish
 from stockfish import Stockfish
 from dataset import DatasetGame
+from game import Game
 from lib.logger import Logger
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
@@ -11,7 +12,7 @@ import numpy as np
 
 def play_game(stockfish_bin, dataset, depth=10, tqbar=None):
 
-    is_white = True if np.random.random() <= .5 else False
+    is_white = Game.WHITE if np.random.random() <= .5 else Game.BLACK
 
     g = GameStockfish(stockfish=stockfish_bin,
                       player_color=is_white,
