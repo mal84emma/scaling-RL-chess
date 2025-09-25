@@ -1,5 +1,6 @@
-import chess.engine
 import logging
+import chess.engine
+from chess.engine import SimpleEngine, Limit
 from scorer import Scorer
 from game import Game
 
@@ -36,15 +37,16 @@ class ScorerStockfish(Scorer):
         Returns:
             scores: A dictionary of scores which has the following key value 
                    pairs; {'cp': cp_score, 'rate': score_rate}
-                   
+        
         The scoring provides two different evaluations:
         - cp_score: Centipawn evaluation from the perspective of the current player
-        - score_rate: Win/draw/loss expectation from the perspective of the current player
+        - score_rate: Win/draw/loss score expectation from the perspective of the current player
         
         References:
         - https://stackoverflow.com/questions/69861415/how-to-get-the-winning-chances-of-white-in-python-chess
         - https://python-chess.readthedocs.io/en/latest/engine.html#chess.engine.Score
         """
+
         scores = self.engine.analyse(game.board, self.limit)['score']
         cp_score = scores.pov(game.board.turn).score()
         score_rate = scores.wdl().pov(game.board.turn).expectation()
