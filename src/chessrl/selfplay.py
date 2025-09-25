@@ -34,13 +34,13 @@ def process_initializer():
 def play_game(agent):
     logger = Logger.get_instance()
 
-    player_color = True if random.random() >= 0.5 else False
+    player_color = Game.WHITE if random.random() >= 0.5 else Game.BLACK
     logger.debug(f"Player is white: {player_color}")
 
     gam = Game(player_color=player_color)
     agent.color = player_color
 
-    if player_color is False:
+    if player_color is Game.BLACK:
         # Make the oponent move
         gam.move(agent.best_move(gam, real_game=True))
 
@@ -73,7 +73,7 @@ def play_game_job(endpoint, result_placeholder, threads):
 def train_model_job(dataset_str, model_path, model_dir):
     process_initializer()
 
-    chess_agent = Agent(True, model_path)
+    chess_agent = Agent(Game.WHITE, model_path)
 
     data_train = DatasetGame()
     data_train.loads(dataset_str)

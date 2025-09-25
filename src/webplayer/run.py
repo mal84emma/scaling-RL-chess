@@ -22,6 +22,7 @@ gpu_initializer()
 
 
 import gamewrapper  # noqa:E402
+from game import Game  # noqa:E402
 
 # Default IP
 IP_ENDPOINT = 'localhost'
@@ -64,7 +65,7 @@ def change_color(color):
                                              agent_path=AGENT_PATH)
     # The user is blacks, so we force the game start by pushing a null move
     if not whites:
-        g.move('null move')
+        g.move(Game.NULL_MOVE)
 
     return "Changed", 200
 
