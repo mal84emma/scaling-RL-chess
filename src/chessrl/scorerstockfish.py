@@ -23,10 +23,10 @@ class ScorerStockfish(Scorer):
             thinking_time: Time limit for engine analysis in seconds (default: 0.01)
             search_depth: Maximum search depth for engine analysis (default: 10)
         """
-        super().__init__()
-        self.engine: chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(binary_path)
-        self.limit = chess.engine.Limit(time=thinking_time, depth=search_depth)
-    
+
+        self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
+        self.limit: Limit = Limit(time=thinking_time, depth=search_depth)
+
     def score_position(self, game: Game) -> dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn.
