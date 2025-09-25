@@ -56,15 +56,15 @@ def get_game_state():
 
 @app.route("/game/<color>", methods=['PUT'])
 def change_color(color):
-    whites = Game.WHITE
+    whites = True
     if color == "0":
-        whites = Game.BLACK
+        whites = False
     gamewrapper.GameWrapper.destroy_instance()
 
     g = gamewrapper.GameWrapper.get_instance(player_color=whites,
                                              agent_path=AGENT_PATH)
     # The user is blacks, so we force the game start by pushing a null move
-    if whites is Game.BLACK:
+    if not whites:
         g.move(Game.NULL_MOVE)
 
     return "Changed", 200
