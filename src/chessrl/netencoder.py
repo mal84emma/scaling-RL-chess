@@ -80,9 +80,10 @@ def _get_castling_planes(board: chess.Board):
     Parameters:
         board: Python-Chess board
     Returns:
-        castling: numpy array. 8x8x2 matrix with 1's in all squares if the
-                  corresponding color can castle, 0's otherwise.
-                  First plane corresponds to white, second to black.
+        castling: numpy array. 8x8x4 matrix with 1's in all squares if the
+                  corresponding color can castle that side, and 0's otherwise.
+                  Planes 1, 2 are white king/queen side,
+                  Planes 3, 4 are black king/queen side.
     """
     castling = np.zeros((8, 8, 4))
     if board.has_kingside_castling_rights(chess.WHITE):
