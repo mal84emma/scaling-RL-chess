@@ -16,7 +16,7 @@ from keras.utils import Sequence, to_categorical
 def _get_pieces_one_hot(board, color=False):
     """ Returns a 3D-matrix representation of the pieces for one color.
     The matrix ins constructed as follows:
-        8x8 (Chess board) x 6 possible pieces (including empty). = 384.
+        8x8 (Chess board) x 6 possible pieces. = 384.
 
     Parameters:
         board: Python-Chess Board. Board.
