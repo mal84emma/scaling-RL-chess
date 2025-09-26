@@ -104,10 +104,10 @@ def _get_side_to_move_plane(board: chess.Board):
     Parameters:
         board: Python-Chess board
     Returns:
-        side_to_move: numpy array. 8x8 matrix with all 1's if white to move,
+        side_to_move: numpy array. 8x8x1 matrix with all 1's if white to move,
                       all 0's if black to move.
     """
-    side_to_move = np.full((8, 8), board.turn, dtype=int)
+    side_to_move = np.full((8, 8, 1), board.turn, dtype=int)
     return side_to_move
 
 
