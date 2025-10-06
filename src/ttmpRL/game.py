@@ -38,21 +38,24 @@ class Game(object):
         if self.date is None:
             self.date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    def move(self):
-        """Makes a move.
-        Params:
-            movement: str, Movement in UCI notation (e.g. f2f3 or g8f6)
-        Returns:
-            success: boolean. Whether the move could be executed
-        """
-
-        player_color = "White" if self.turn == chess.WHITE else "Black"
+    def next_move(self):
+        """Retrieves and makes the move of the player who's turn it is."""
         if self.turn == chess.WHITE:
             player_to_move = self.white_player
         else:
             player_to_move = self.black_player
 
         movement = player_to_move.get_move(self)
+
+        self.move(movement)
+
+    def move(self, movement):
+        """Make a specified move.
+
+        Params:
+            movement: str, Movement in UCI notation (e.g. f2f3 or g8f6).
+        """
+        player_color = "White" if self.turn == chess.WHITE else "Black"
         assert movement in self.get_legal_moves(), (
             f"{player_color} player tried to make an illegal move: {movement}"
         )
@@ -78,7 +81,7 @@ class Game(object):
     def get_history(self):
         moves = [x.uci() for x in self.board.move_stack]
         res = self.get_result()
-        return {"moves": moves, "result": res, "date": self.date}
+        return {"result": res, "moves": moves, "date": self.date}
 
     def get_fen(self):
         return self.board.board_fen()

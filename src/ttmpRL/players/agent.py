@@ -5,11 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ttmpRL import Game
+    from ttmpRL import Game, Scorer
+
+import random
 
 import numpy as np
 
 import ttmpRL.model as model
+from ttmpRL.scorer import StockfishScorer
 from ttmpRL.utils import get_uci_labels
 
 from .player import Player
@@ -25,45 +28,52 @@ class Agent(Player):
         to predict the policy only over the legal movements.
     """
 
-    def __init__(self, color, weights_path=None):
+    def __init__(self, color, weights_path=None, stockfish_bin=None):
         """ToDo."""
         super().__init__(color)
+        self.uci_dict = {u: i for i, u in enumerate(get_uci_labels())}
 
-        self.model = model.ChessModel(compile_model=True, weights=weights_path)
-        self.move_encodings = get_uci_labels()
-        self.uci_dict = {u: i for i, u in enumerate(self.move_encodings)}
+        assert weights_path is None or stockfish_bin is None, (
+            f"You must provide either a model weights path or a Stockfish binary, but not both.\
+                You provided: weights_path={weights_path}, stockfish_bin={stockfish_bin}."
+        )
+
+        if weights_path is not None:
+            self.model: Scorer = model.ChessModel(
+                compile_model=True, weights=weights_path
+            )
+        elif stockfish_bin is not None:
+            self.model: Scorer = StockfishScorer(stockfish_bin)
 
     def get_move(self, game: Game) -> str:
-        """Finds and returns the best possible move (UCI encoded).
+        """Searches through all legal moves and returns the move which has
+        the lowest predicted score for the opponent (UCI encoded).
 
         Parameters:
             game: Game. Current game before the move of this agent is made.
-            real_game: Whether to use MCTS or only the neural network (self
-            play vs playing in a real environment).
-            max_iters: if not playing a real game, the max number of iterations
-            of the MCTS algorithm.
 
         Returns:
             str. UCI encoded movement.
         """
         move = game.NULL_MOVE
-        policy = self.predict_policy(game)
-        move = game.get_legal_moves()[np.argmax(policy)]
+        (legal_moves, next_states) = game.get_legal_moves(final_states=True)
+        move_scores = []
+        for s in next_states:
+            move_scores.append(self.model.score_position(s)["cp"])
+
+        # move = legal_moves[np.argmin(move_scores)]
+        # NOTE: an issue I'm encountering is that when there are multiple
+        # 0 score moves, the agent is unable to pick the one that actually wins
+        # but Centipawn scores also have their issues, mate is numerically very spikey
+
+        print(move_scores)
+
+        best_moves = np.argwhere(move_scores == np.amin(move_scores)).flatten().tolist()
+        move = random.choice([legal_moves[i] for i in best_moves])
+
+        print(move)
+
         return move
-
-    def predict_outcome(self, game: Game) -> float:
-        """Predicts the outcome of a game from the current position."""
-        game_matr = model.get_game_state(game)
-        return self.model.predict(np.expand_dims(game_matr, axis=0))[1][0][0]
-
-    def predict_policy(self, game: Game, mask_legal_moves=True) -> float:
-        """Predict the policy distribution over all possible moves."""
-        game_matr = model.get_game_state(game)
-        policy = self.model.predict(np.expand_dims(game_matr, axis=0))[0][0]
-        if mask_legal_moves:
-            legal_moves = game.get_legal_moves()
-            policy = [policy[self.uci_dict[x]] for x in legal_moves]
-        return policy
 
     def save(self, path):
         self.model.save_weights(path)
@@ -73,3 +83,9 @@ class Agent(Player):
 
     def clone(self):
         return Agent(self.color, self.model.weights_path)
+
+    def close(self):
+        if isinstance(self.model, StockfishScorer):
+            self.model.close()
+        else:
+            del self.model

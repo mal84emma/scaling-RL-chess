@@ -28,11 +28,10 @@ class GameDataset(object):
         moves = hist["moves"]
         result = hist["result"]
         date = hist["date"]
-        p_color = hist["player_color"]
 
         augmented = []
 
-        g = Game(date=date, player_color=p_color)
+        g = Game(date=date)
 
         for m in moves:
             augmented.append({"game": g, "next_move": m, "result": result})
@@ -50,7 +49,7 @@ class GameDataset(object):
     def loads(self, string):
         gamess = json.loads(string)
         for item in gamess:
-            g = Game(date=item["date"], player_color=item["player_color"])
+            g = Game(date=item["date"])
             if len(item["moves"]) > 0:
                 for m in item["moves"]:
                     g.move(m)

@@ -1,3 +1,3 @@
 from .game import Game
-from .scorer import Scorer
-from .players import Stockfish, Agent, TTAgent
+from .players import Agent, Stockfish, TTAgent
+from .scorer import Scorer, StockfishScorer
