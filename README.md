@@ -17,6 +17,8 @@ If you want to reuse this code on your project, and have any doubt [here](https:
 
 ## Notes
 
+- Using `pip install -e .` to install the code as a module and allow `src` to be accessed from anywhere
+
 - Current base model settings (`modela`):
    - ToDo
 
@@ -32,6 +34,10 @@ If you want to reuse this code on your project, and have any doubt [here](https:
 - Work out how to evaluate game performance, i.e. how good the play of a model is in a way other than naively playing another model
 - Implement the test-time MPC fine-tuning strategy (use new class and overload `predict` method) - aim for 2-3 mins per move to mimic 90min format classical chess
 - Think about how this strategy differs from the MCTS used by AlphaZero (it's kind of exploring the future in a similar way, i.e. on-policy-ish, but maybe having access to an opponent engine is the difference c.f. the need to self-play)
+
+### Closing engine connections
+
+Note that connections to the Stockfish engine objects need to be closed explicitly in order for them to be properly cleaned up and prevent the program from hanging. This is done by calling the `close()` method on the relevant object which owns the engine connection.
 
 ## Requirements
 The necessary python packages (ATM) are listed in the requirements file.

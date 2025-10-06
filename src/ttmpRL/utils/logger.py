@@ -1,6 +1,4 @@
-"""
-Defines a custom Logger to be used in all the distributed processes.
-"""
+""" Defines a custom Logger to be used in all processes. """
 import logging
 
 

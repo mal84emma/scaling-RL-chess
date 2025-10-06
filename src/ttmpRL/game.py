@@ -1,45 +1,56 @@
 import chess
+from chess import Board
 import chess.svg
 import cairosvg
 
 import numpy as np
 from io import BytesIO
 from PIL import Image
-from matplotlib import pyplot as plt
 from datetime import datetime
 
 
 class Game(object):
 
     NULL_MOVE = '00000'
-    WHITE = chess.WHITE
-    BLACK = chess.BLACK
 
-    def __init__(self, board=None, player_color=chess.WHITE, date=None):
+    def __init__(self,
+                 white_player:"Player"=None,
+                 black_player:"Player"=None,
+                 board:Board=None,
+                 date=None
+                 ):
+
+        self.white_player = white_player
+        self.black_player = black_player
+
         if board is None:
-            self.board = chess.Board()
+            self.board = Board()
         else:
             self.board = board
-        self.player_color = player_color
 
         self.date = date
         if self.date is None:
             self.date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    def move(self, movement):
+    def move(self):
         """ Makes a move.
         Params:
-            movement: str, Movement in UCI notation (f2f3, g8f6...)
+            movement: str, Movement in UCI notation (e.g. f2f3 or g8f6)
         Returns:
             success: boolean. Whether the move could be executed
         """
-        # This is to prevent python-chess to put a illegal move in the
-        # move stack before launching the exception
-        success = False
-        if movement in self.get_legal_moves():
-            self.board.push(chess.Move.from_uci(movement))
-            success = True
-        return success
+
+        player_color = 'White' if self.turn == chess.WHITE else 'Black'
+        if self.turn == chess.WHITE:
+            player_to_move = self.white_player
+        else:
+            player_to_move = self.black_player
+
+        movement = player_to_move.get_move(self)
+        assert movement in self.get_legal_moves(),\
+            f"{player_color} player tried to make an illegal move: {movement}"
+
+        self.board.push(chess.Move.from_uci(movement))
 
     def get_legal_moves(self, final_states=False):
         """ Gets a list of legal moves in the current turn.
@@ -62,7 +73,6 @@ class Game(object):
         res = self.get_result()
         return {'moves': moves,
                 'result': res,
-                'player_color': self.player_color,
                 'date': self.date}
 
     def get_fen(self):
@@ -82,12 +92,10 @@ class Game(object):
     def reset(self):
         self.board.reset()
 
-    def free(self):
-        """ This method will be implemented by children. This will serve
-        as a way to disconnect from the engine or free resources but without
-        destroying the object
-        """
-        pass
+    def close(self):
+        """ Closes any resources used by the game (e.g. engines)."""
+        self.white_player.close()
+        self.black_player.close()
 
     def get_result(self):
         """ Returns the result of the game for the white pieces. None if the
@@ -111,7 +119,12 @@ class Game(object):
     def __len__(self):
         return len(self.board.move_stack)
 
-    def plot_board(self, return_img=False, show_moves=True, save_path=None):
+    def plot_board(self,
+                   return_img=False,
+                   show_moves=True,
+                   orientation=chess.WHITE,
+                   save_path=None
+                   ):
         """ Plots the current state of the board. This is useful for debug/log
         purposes while working outside a notebook
 
@@ -126,7 +139,7 @@ class Game(object):
         else:
             arrows = []
 
-        svg = chess.svg.board(self.board, orientation=self.player_color, arrows=arrows)
+        svg = chess.svg.board(self.board, orientation=orientation, arrows=arrows)
 
         out = BytesIO()
         cairosvg.svg2png(svg, write_to=out)

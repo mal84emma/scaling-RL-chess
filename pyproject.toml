@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ttmpRL"
+version = "0.0.1"
+dependencies = [
+  "cairosvg==2.8.2",
+  "chess==1.11.2",
+  "matplotlib==3.10.6",
+  "numpy==1.26.4",
+  "Pillow==11.3.0",
+  "tqdm==4.67.1",
+  "seaborn==0.13.2"
+]
+authors = [
+  { name="Max", email="mal84@cam.ac.uk" },
+]
+description = "Test-time scaling RL using MPC for chess"
+license = "MIT AND (Apache-2.0 OR BSD-2-Clause)"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+]

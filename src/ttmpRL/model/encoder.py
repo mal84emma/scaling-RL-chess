@@ -1,16 +1,13 @@
 """
 Module with all the necessary stuff to encode/decode game states for using them
-with a neural network. Also contains a Sequence Generator for fitting a
+with a neural network.
+
+##Not anymore - Also contains a Sequence Generator for fitting a
 DatasetGame to a Model.
 """
 
 import numpy as np
 import chess
-from game import Game
-from chessrl.utils.dataset import DatasetGame
-
-
-from keras.utils import Sequence, to_categorical
 
 
 def _get_pieces_one_hot(board, color=False):
@@ -165,93 +162,3 @@ def get_game_state(game, flipped=False):
     if flipped:
         game_state = np.rot90(game_state, k=2)
     return game_state
-
-
-def get_uci_labels():
-    """ Returns a list of possible moves encoded as UCI (including
-    promotions).
-    Source:
-        https://github.com/Zeta36/chess-alpha-zero/blob/
-        master/src/chess_zero/config.py#L88
-    """
-    labels_array = []
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    numbers = ['1', '2', '3', '4', '5', '6', '7', '8']
-    promoted_to = ['q', 'r', 'b', 'n']
-
-    for l1 in range(8):
-        for n1 in range(8):
-            destinations = [(t, n1) for t in range(8)] + \
-                [(l1, t) for t in range(8)] + \
-                [(l1 + t, n1 + t) for t in range(-7, 8)] + \
-                [(l1 + t, n1 - t) for t in range(-7, 8)] + \
-                [(l1 + a, n1 + b) for (a, b) in
-                    [(-2, -1), (-1, -2), (-2, 1), (1, -2),
-                     (2, -1), (-1, 2), (2, 1), (1, 2)]]
-
-            for (l2, n2) in destinations:
-                if (l1, n1) != (l2, n2) and l2 in range(8) and n2 in range(8):  # noqa: E501
-                    move = letters[l1] + numbers[n1] + letters[l2] + numbers[n2]  # noqa: E501
-                    labels_array.append(move)
-
-    for l1 in range(8):
-        letter = letters[l1]
-        for p in promoted_to:
-            labels_array.append(letter + '2' + letter + '1' + p)
-            labels_array.append(letter + '7' + letter + '8' + p)
-            if l1 > 0:
-                l_l = letters[l1 - 1]
-                labels_array.append(letter + '2' + l_l + '1' + p)
-                labels_array.append(letter + '7' + l_l + '8' + p)
-            if l1 < 7:
-                l_r = letters[l1 + 1]
-                labels_array.append(letter + '2' + l_r + '1' + p)
-                labels_array.append(letter + '7' + l_r + '8' + p)
-    return labels_array
-
-
-class DataGameSequence(Sequence):
-    """ Transforms a Dataset to a Data generator to be fed to the training
-    loop of the neural network.
-
-    Attributes:
-        dataset: DatasetGame. Dataset of fames
-        batch_size: int. Nb of board representations of each batch
-        uci_ids: dict. Encoding the move UCI labels to one-hot.
-        random_flips: float. Proportion of board representation which will
-                        be flipped 180 degrees.
-    """
-
-    def __init__(self, dataset: DatasetGame, batch_size: int = 8,  # noqa:F821
-                 random_flips=0):
-        self.dataset = dataset
-        self.batch_size = min(batch_size, len(dataset))
-        self.uci_ids = {u: i for i, u in enumerate(get_uci_labels())}
-        self.random_flips = random_flips
-
-    def __len__(self):
-        return int(len(self.dataset) / self.batch_size)
-
-    def __getitem__(self, idx):
-        batch = self.dataset[idx * self.batch_size:
-                             (idx + 1) * self.batch_size]
-        batch_x = []  # Board reprs
-        batch_y_policies = []
-        batch_y_values = []
-
-        for i in batch:
-            i_augmented = self.dataset.augment_game(i)
-
-            flip = np.random.rand() < self.random_flips
-            batch_x.extend([get_game_state(i_g['game'], flipped=flip)
-                            for i_g in i_augmented])
-            batch_y_policies.extend([
-                to_categorical(self.uci_ids[targets['next_move']],
-                               num_classes=1968)
-                for targets in i_augmented]
-            )
-            batch_y_values.extend([targets['result']
-                                   for targets in i_augmented])
-
-        return np.asarray(batch_x), (np.asarray(batch_y_policies),
-                                     np.asarray(batch_y_values))

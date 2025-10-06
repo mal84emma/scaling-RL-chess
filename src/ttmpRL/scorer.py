@@ -1,7 +1,6 @@
 import logging
 import chess.engine
 from chess.engine import SimpleEngine, Limit
-from game import Game
 
 # Remove annoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
@@ -26,7 +25,7 @@ class Scorer():
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         self.limit: Limit = Limit(time=thinking_time, depth=search_depth)
 
-    def score_position(self, game: Game) -> dict:
+    def score_position(self, game: "Game") -> dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn.
 
@@ -53,10 +52,5 @@ class Scorer():
         return {'cp': cp_score, 'rate': score_rate}
 
     def close(self):
-        """Close the connection to the engine. This needs to be done
-        explicitly for each engine, otherwise the engine process will
-        remain active, and the program can hang due to an async lock.
-        The descturctor is not guaranteed to clean up the engine at
-        the right time."""
-        if hasattr(self, 'engine') and self.engine:
-            self.engine.quit()
+        """Close the connection to the engine."""
+        self.engine.quit()

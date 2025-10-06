@@ -4,8 +4,7 @@ from chess.engine import SimpleEngine, Limit
 import logging
 
 import random
-from chessrl.agents.player import Player
-from game import Game
+from .player import Player
 
 # Remove anoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
@@ -36,9 +35,9 @@ class Stockfish(Player):
 
         self.elo = elo
 
-    def get_move(self, game: Game):
+    def get_move(self, game: "Game") -> str:
 
-        assert game.board.turn == self.color, \
+        assert game.turn == self.color, \
             "It's not Stockfish's turn to play."
 
         result = self.engine.play(game.board, self.limit)
@@ -61,11 +60,6 @@ class Stockfish(Player):
         return move
 
     def close(self):
-        """Close the connection to the engine. This needs to be done
-        explicitly for each engine, otherwise the engine process will
-        remain active, and the program can hang due to an async lock.
-        The descturctor is not guaranteed to clean up the engine at
-        the right time."""
-        if hasattr(self, 'engine') and self.engine:
-            self.engine.quit()
+        """Close the connection to the engine."""
+        self.engine.quit()
 

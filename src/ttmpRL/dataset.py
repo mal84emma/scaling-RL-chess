@@ -1,7 +1,7 @@
-import game
-from game import Game
-
 import json
+import numpy as np
+
+from .game import Game
 
 
 class GameDataset(object):
@@ -32,7 +32,7 @@ class GameDataset(object):
 
         augmented = []
 
-        g = game.Game(date=date, player_color=p_color)
+        g = Game(date=date, player_color=p_color)
 
         for m in moves:
             augmented.append({'game': g,
@@ -52,14 +52,14 @@ class GameDataset(object):
     def loads(self, string):
         gamess = json.loads(string)
         for item in gamess:
-            g = game.Game(date=item['date'], player_color=item['player_color'])
+            g = Game(date=item['date'], player_color=item['player_color'])
             if len(item['moves']) > 0:
                 for m in item['moves']:
                     g.move(m)
                 self.games.append(g)
 
     def save(self, path):
-        dataset_existent = DatasetGame()
+        dataset_existent = GameDataset()
         try:
             dataset_existent.load(path)
         except FileNotFoundError:
@@ -77,9 +77,9 @@ class GameDataset(object):
 
     def append(self, other):
         """ Appends a game (or another Dataset) to this one"""
-        if isinstance(other, game.Game):
+        if isinstance(other, Game):
             self.games.append(other)
-        elif isinstance(other, DatasetGame):
+        elif isinstance(other, GameDataset):
             self.games.extend(other.games)
 
     def __str__(self):

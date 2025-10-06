@@ -1,0 +1,1 @@
+from .pathing import get_model_path

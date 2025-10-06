@@ -1,57 +1,56 @@
-from gamestockfish import GameStockfish
-from stockfish import Stockfish
-from dataset import DatasetGame
-from game import Game
-from lib.logger import Logger
-from concurrent.futures import ThreadPoolExecutor
-from tqdm import tqdm
+import chess
+from ttmpRL import Game, Stockfish
+from ttmpRL.dataset import GameDataset
+from ttmpRL.utils import Logger
 
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 import argparse
 import numpy as np
 
 
-def play_game(stockfish_bin, dataset, depth=20, tqbar=None):
+def play_game(stockfish_bin, dataset, tqbar=None):
 
     # TODO: add sampling of ELOs to make games different
+    white_stockfish = Stockfish(chess.WHITE, stockfish_bin)
+    black_stockfish = Stockfish(chess.BLACK, stockfish_bin)
 
-    is_white = Game.WHITE if np.random.random() <= .5 else Game.BLACK
-
-    g = GameStockfish(stockfish=stockfish_bin,
-                      player_color=is_white)
-    stockf = Stockfish(is_white, stockfish_bin)
-
-    # get game Stockfish to play first if it's white
-    if not is_white == Game.WHITE:
-        g.move(Game.NULL_MOVE)
+    game = Game(white_player=white_stockfish,
+             black_player=black_stockfish)
 
     # play out game
-    while g.get_result() is None:
-        bm = stockf.get_move(g)
-        g.move(bm)
+    while game.get_result() is None:
+        game.move()
 
-    dataset.append(g)
+    dataset.append(game)
     if tqbar is not None:
         tqbar.update(1)
 
     # Kill stockfish processes
-    g.close()
-    stockf.close()
+    white_stockfish.close()
+    black_stockfish.close()
 
 
 def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
     logger = Logger.get_instance()
-    d = DatasetGame()
+    d = GameDataset()
     pbar = tqdm(total=num_games)
 
     # TODO: add sampling of ELOs to make games different
 
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        for _ in range(num_games):
-            executor.submit(play_game,
-                            stockfish_bin=stockfish_bin,
-                            dataset=d,
-                            tqbar=pbar)
-    pbar.close()
+    #with ThreadPoolExecutor(max_workers=workers) as executor:
+    # for _ in range(num_games):
+    #     executor.submit(play_game,
+    #                     stockfish_bin=stockfish_bin,
+    #                     dataset=d,
+    #                     tqbar=pbar)
+    # pbar.close()
+
+    for _ in tqdm(range(num_games)):
+        play_game(stockfish_bin=stockfish_bin,
+                  dataset=d,
+                  tqbar=pbar)
+
     logger.info("Saving dataset...")
     d.save(save_path)
 

@@ -1,5 +1,3 @@
-from game import Game
-
 class Player(object):
     """ This class represents contains the necessary methods all chess
     player objects must implement.
@@ -9,7 +7,7 @@ class Player(object):
             raise Exception('Cannot create Player Abstract class.')
         self.color = color
 
-    def get_move(self, game:Game) -> str:  # noqa: E0602, F821
+    def get_move(self, game:"Game") -> str:
         """Makes the agent to make a move in the game. The agent should also
         pass the turn when it finishes (aka. notify the other players).
         """

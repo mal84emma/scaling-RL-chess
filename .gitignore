@@ -1,10 +1,14 @@
+# MacOS system files
 .DS_Store
+
+# Notes & notebooks
 NOTES.md
 ./notebooks/*
+
+# Data files
 data/*
-notebooks
-.ropeproject
-.pyc
-*__pycache__*
 resources/stockfish*
-data/*
+
+# Python
+*__pycache__*
+*.egg-info
