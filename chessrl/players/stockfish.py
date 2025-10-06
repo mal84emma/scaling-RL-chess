@@ -4,7 +4,7 @@ from chess.engine import SimpleEngine, Limit
 import logging
 
 import random
-from player import Player
+from chessrl.agents.player import Player
 from game import Game
 
 # Remove anoying warnings of the engine.
@@ -41,7 +41,7 @@ class Stockfish(Player):
         assert game.board.turn == self.color, \
             "It's not Stockfish's turn to play."
 
-        result = self.engine.play(game.board, self.limit, options={"UCI_Elo": self.elo})
+        result = self.engine.play(game.board, self.limit)
         move = result.move.uci()
 
         # add a bit of stochasticity to Stockfish's move choice, select move

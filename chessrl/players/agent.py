@@ -1,12 +1,11 @@
 import numpy as np
 
-import mctree
-import netencoder
+import chessrl.players.netencoder as netencoder
 
 from game import Game
-from player import Player
-from model import ChessModel
-from dataset import DatasetGame
+from chessrl.agents.player import Player
+from chessrl.agents.model import ChessModel
+from chessrl.utils.dataset import DatasetGame
 
 
 class Agent(Player):
@@ -25,7 +24,7 @@ class Agent(Player):
         self.move_encodings = netencoder.get_uci_labels()
         self.uci_dict = {u: i for i, u in enumerate(self.move_encodings)}
 
-    def get_move(self, game:Game, real_game=False, max_iters=900, verbose=False) -> str:  # noqa: E0602, F821
+    def get_move(self, game:Game) -> str:
         """ Finds and returns the best possible move (UCI encoded)
 
         Parameters:
@@ -39,21 +38,16 @@ class Agent(Player):
             str. UCI encoded movement.
         """
         move = Game.NULL_MOVE
-        if real_game:
-            policy = self.predict_policy(game)
-            move = game.get_legal_moves()[np.argmax(policy)]
-        else:
-            if game.get_result() is None:
-                current_tree = mctree.Tree(game)
-                move = current_tree.search_move(self, max_iters=max_iters, verbose=verbose)
+        policy = self.predict_policy(game)
+        move = game.get_legal_moves()[np.argmax(policy)]
         return move
 
-    def predict_outcome(self, game:Game) -> float:  # noqa: E0602, F821
+    def predict_outcome(self, game:Game) -> float:
         """ Predicts the outcome of a game from the current position """
         game_matr = netencoder.get_game_state(game)
         return self.model.predict(np.expand_dims(game_matr, axis=0))[1][0][0]
 
-    def predict_policy(self, game:Game, mask_legal_moves=True) -> float:  # noqa: E0602, F821
+    def predict_policy(self, game:Game, mask_legal_moves=True) -> float:
         """ Predict the policy distribution over all possible moves. """
         game_matr = netencoder.get_game_state(game)
         policy = self.model.predict(np.expand_dims(game_matr, axis=0))[0][0]
@@ -62,6 +56,10 @@ class Agent(Player):
             policy = [policy[self.uci_dict[x]] for x in legal_moves]
         return policy
 
+    # TODO: why is this a method of Agent? This should be a script.
+    # Separate the NN model from the Agent class. Rewrite it so that
+    # the Agent can also validly take position score predictions from   
+    # Stockfish or other engines.
     def train(self, dataset: DatasetGame,
               epochs=1, logdir=None, batch_size=1,
               validation_split=0):

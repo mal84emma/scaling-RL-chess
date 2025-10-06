@@ -63,7 +63,7 @@ def play_game_job(id: int, model_path, stockfish_depth=10, stockfish_elo=1320,
         from stockfish import Stockfish
         chess_agent = Stockfish(color=agent_is_white,
                                 binary_path='../../res/stockfish-17-macos-m1-apple-silicon',
-                                elo=1600)
+                                elo=2500)
     except OSError:
         logger.error("Model not found. Exiting.")
         return None

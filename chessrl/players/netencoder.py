@@ -7,7 +7,7 @@ DatasetGame to a Model.
 import numpy as np
 import chess
 from game import Game
-from dataset import DatasetGame
+from chessrl.utils.dataset import DatasetGame
 
 
 from keras.utils import Sequence, to_categorical

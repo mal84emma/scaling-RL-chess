@@ -4,7 +4,7 @@ from game import Game
 import json
 
 
-class DatasetGame(object):
+class GameDataset(object):
     """
     This class holds several games and provides operations to
     serialize/deserialize them as a JSON file. Also, it takes a game and

@@ -5,13 +5,12 @@ import numpy as np
 from numpy.random import randint
 from tqdm import tqdm
 from timeit import default_timer as timer
-from lib.logger import Logger
+from utils.logger import Logger
 import traceback
 
-from dataset import DatasetGame
-from agent import Agent
+from chessrl.utils.dataset import DatasetGame
+from chessrl.agents.agent import Agent
 from game import Game
-from gamestockfish import GameStockfish
 
 
 def playout_and_save_game(

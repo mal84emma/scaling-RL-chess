@@ -1,18 +1,17 @@
 import logging
 import chess.engine
 from chess.engine import SimpleEngine, Limit
-from scorer import Scorer
 from game import Game
 
 # Remove annoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
-class ScorerStockfish(Scorer):
+class Scorer():
     """A chess position scorer that uses the Stockfish engine to evaluate positions.
-    
-    This class implements the Scorer interface and uses a Stockfish chess engine
-    to calculate board position scores for the player that is about to take a turn.
+
+    This class uses a Stockfish chess engine instance to calculate board position
+    scores for the player that is about to take a turn.
     """
 
     def __init__(self, binary_path: str, thinking_time: float = 0.01, search_depth: int = 10):
