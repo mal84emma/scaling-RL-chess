@@ -1,25 +1,31 @@
-import chess
-from chess import Board
-import chess.svg
-import cairosvg
+from __future__ import annotations
 
-import numpy as np
-from io import BytesIO
-from PIL import Image
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ttmpRL.players import Player
+
 from datetime import datetime
+from io import BytesIO
+
+import cairosvg
+import chess
+import chess.svg
+import numpy as np
+from chess import Board
+from PIL import Image
 
 
 class Game(object):
+    NULL_MOVE = "00000"
 
-    NULL_MOVE = '00000'
-
-    def __init__(self,
-                 white_player:"Player"=None,
-                 black_player:"Player"=None,
-                 board:Board=None,
-                 date=None
-                 ):
-
+    def __init__(
+        self,
+        white_player: Player = None,
+        black_player: Player = None,
+        board: Board = None,
+        date=None,
+    ):
         self.white_player = white_player
         self.black_player = black_player
 
@@ -33,27 +39,28 @@ class Game(object):
             self.date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     def move(self):
-        """ Makes a move.
+        """Makes a move.
         Params:
             movement: str, Movement in UCI notation (e.g. f2f3 or g8f6)
         Returns:
             success: boolean. Whether the move could be executed
         """
 
-        player_color = 'White' if self.turn == chess.WHITE else 'Black'
+        player_color = "White" if self.turn == chess.WHITE else "Black"
         if self.turn == chess.WHITE:
             player_to_move = self.white_player
         else:
             player_to_move = self.black_player
 
         movement = player_to_move.get_move(self)
-        assert movement in self.get_legal_moves(),\
+        assert movement in self.get_legal_moves(), (
             f"{player_color} player tried to make an illegal move: {movement}"
+        )
 
         self.board.push(chess.Move.from_uci(movement))
 
     def get_legal_moves(self, final_states=False):
-        """ Gets a list of legal moves in the current turn.
+        """Gets a list of legal moves in the current turn.
         Parameters:
             final_states: bool. Whether copies of the board after executing
             each legal movement are returned.
@@ -71,9 +78,7 @@ class Game(object):
     def get_history(self):
         moves = [x.uci() for x in self.board.move_stack]
         res = self.get_result()
-        return {'moves': moves,
-                'result': res,
-                'date': self.date}
+        return {"moves": moves, "result": res, "date": self.date}
 
     def get_fen(self):
         return self.board.board_fen()
@@ -83,7 +88,7 @@ class Game(object):
 
     @property
     def turn(self):
-        """ Returns whether is white turn."""
+        """Returns whether is white turn."""
         return self.board.turn
 
     def get_copy(self):
@@ -93,12 +98,12 @@ class Game(object):
         self.board.reset()
 
     def close(self):
-        """ Closes any resources used by the game (e.g. engines)."""
+        """Closes any resources used by the game (e.g. engines)."""
         self.white_player.close()
         self.black_player.close()
 
     def get_result(self):
-        """ Returns the result of the game for the white pieces. None if the
+        """Returns the result of the game for the white pieces. None if the
         game is not over. This method checks if the game ends in a draw due
         to the fifty-move rule. Threefold is not checked because it can
         be too slow.
@@ -119,13 +124,10 @@ class Game(object):
     def __len__(self):
         return len(self.board.move_stack)
 
-    def plot_board(self,
-                   return_img=False,
-                   show_moves=True,
-                   orientation=chess.WHITE,
-                   save_path=None
-                   ):
-        """ Plots the current state of the board. This is useful for debug/log
+    def plot_board(
+        self, return_img=False, show_moves=True, orientation=chess.WHITE, save_path=None
+    ):
+        """Plots the current state of the board. This is useful for debug/log
         purposes while working outside a notebook
 
         Parameters:

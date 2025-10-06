@@ -1,11 +1,10 @@
-""" Defines a custom Logger to be used in all processes. """
+"""Defines a custom Logger to be used in all processes."""
+
 import logging
 
 
-class Logger():
-    """
-    Custom logger (with colors). MUST be obtained with Logger.get_instance()
-    """
+class Logger:
+    """Custom logger (with colors). MUST be obtained with Logger.get_instance()."""
 
     __the_instance = None
 
@@ -48,7 +47,8 @@ class Logger():
 
 
 class ColorFormatter(logging.Formatter):
-    """ Internal class to make the outputs colored """
+    """Internal class to make the outputs colored."""
+
     l_blue = "\x1b[94m"
     grey = "\x1b[38;21m"
     yellow = "\x1b[33;21m"
@@ -62,7 +62,7 @@ class ColorFormatter(logging.Formatter):
         logging.INFO: grey + fmat + reset,
         logging.WARNING: yellow + fmat + reset,
         logging.ERROR: red + fmat + reset,
-        logging.CRITICAL: bold_red + fmat + reset
+        logging.CRITICAL: bold_red + fmat + reset,
     }
 
     def format(self, record):

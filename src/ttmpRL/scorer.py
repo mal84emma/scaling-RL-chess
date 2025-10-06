@@ -1,19 +1,24 @@
 import logging
+
 import chess.engine
-from chess.engine import SimpleEngine, Limit
+from chess.engine import Limit, SimpleEngine
+
+from .game import Game
 
 # Remove annoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
-class Scorer():
+class Scorer:
     """A chess position scorer that uses the Stockfish engine to evaluate positions.
 
     This class uses a Stockfish chess engine instance to calculate board position
     scores for the player that is about to take a turn.
     """
 
-    def __init__(self, binary_path: str, thinking_time: float = 0.01, search_depth: int = 10):
+    def __init__(
+        self, binary_path: str, thinking_time: float = 0.01, search_depth: int = 10
+    ):
         """Initialize the ScorerStockfish with a Stockfish engine.
 
         Args:
@@ -25,15 +30,15 @@ class Scorer():
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         self.limit: Limit = Limit(time=thinking_time, depth=search_depth)
 
-    def score_position(self, game: "Game") -> dict:
+    def score_position(self, game: Game) -> dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn.
 
         Args:
             game: An object of the Game class which describes a game position
-            
+
         Returns:
-            scores: A dictionary of scores which has the following key value 
+            scores: A dictionary of scores which has the following key value
                    pairs; {'cp': cp_score, 'rate': score_rate}
 
         The scoring provides two different evaluations:
@@ -45,11 +50,11 @@ class Scorer():
         - https://python-chess.readthedocs.io/en/latest/engine.html#chess.engine.Score
         """
 
-        scores = self.engine.analyse(game.board, self.limit)['score']
+        scores = self.engine.analyse(game.board, self.limit)["score"]
         cp_score = scores.pov(game.board.turn).score()
         score_rate = scores.wdl().pov(game.board.turn).expectation()
 
-        return {'cp': cp_score, 'rate': score_rate}
+        return {"cp": cp_score, "rate": score_rate}
 
     def close(self):
         """Close the connection to the engine."""

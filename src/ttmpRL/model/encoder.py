@@ -6,12 +6,12 @@ with a neural network.
 DatasetGame to a Model.
 """
 
-import numpy as np
 import chess
+import numpy as np
 
 
 def _get_pieces_one_hot(board, color=False):
-    """ Returns a 3D-matrix representation of the pieces for one color.
+    """Returns a 3D-matrix representation of the pieces for one color.
     The matrix ins constructed as follows:
         8x8 (Chess board) x 6 possible pieces. = 384.
 
@@ -23,22 +23,23 @@ def _get_pieces_one_hot(board, color=False):
     """
     mask = np.zeros((8, 8, len(chess.PIECE_TYPES)))
     for i, piece_id in enumerate(chess.PIECE_TYPES):
-        mask[:, :, i] = np.array(board.pieces(piece_id, color).mirror()
-                                 .tolist()).reshape(8, 8)
+        mask[:, :, i] = np.array(
+            board.pieces(piece_id, color).mirror().tolist()
+        ).reshape(8, 8)
     # Encode blank positions
-    #mask[:, :, 0] = (~np.array(mask.sum(axis=-1), dtype=bool)).astype(int)
+    # mask[:, :, 0] = (~np.array(mask.sum(axis=-1), dtype=bool)).astype(int)
     return mask
 
 
 def _get_pieces_planes(board):
-    """ This method returns the matrix representation of a game turn
+    """This method returns the matrix representation of a game turn
     (positions of the pieces of the two colors)
 
     Parameters:
         board: Python-Chess board
     Returns:
         current: numpy array. 3D Matrix with dimensions 14x8x8.
-        """
+    """
     # TODO: castling rights, en passant, 50 move rule, player turn etc? this isn't the full game state
     # see chess programming wiki for ideas
     # https://www.chessprogramming.org/Board_Representation#FEN_Board_Representation
@@ -54,7 +55,7 @@ def _get_pieces_planes(board):
 
 
 def _get_en_passant_plane(board: chess.Board):
-    """ Returns a matrix with the en passant square if available.
+    """Returns a matrix with the en passant square if available.
 
     Parameters:
         board: Python-Chess board
@@ -72,7 +73,7 @@ def _get_en_passant_plane(board: chess.Board):
 
 
 def _get_castling_planes(board: chess.Board):
-    """ Returns four planes with the castling rights for each color.
+    """Returns four planes with the castling rights for each color.
 
     Parameters:
         board: Python-Chess board
@@ -96,7 +97,7 @@ def _get_castling_planes(board: chess.Board):
 
 
 def _get_side_to_move_plane(board: chess.Board):
-    """ Returns a matrix with the side to move.
+    """Returns a matrix with the side to move.
 
     Parameters:
         board: Python-Chess board
@@ -136,7 +137,7 @@ def _get_game_history(board, T=8):
 
 
 def get_game_state(game, flipped=False):
-    """ This method returns the matrix representation of a game with its
+    """This method returns the matrix representation of a game with its
     history of moves.
 
     Parameters:
@@ -156,7 +157,9 @@ def get_game_state(game, flipped=False):
     # - 50 move rule counter
     # - move repetition count
     # These can be hard-implemented by the search algorithm if needed
-    game_state = np.concatenate([pieces, side_to_move, castling_rights, en_passant], axis=-1)
+    game_state = np.concatenate(
+        [pieces, side_to_move, castling_rights, en_passant], axis=-1
+    )
 
     # Why flip the board?
     if flipped:

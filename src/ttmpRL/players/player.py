@@ -1,14 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ttmpRL import Game
+
+
 class Player(object):
-    """ This class represents contains the necessary methods all chess
+    """This class represents contains the necessary methods all chess
     player objects must implement.
     """
+
     def __init__(self, color):
         if type(self) is Player:
-            raise Exception('Cannot create Player Abstract class.')
+            raise Exception("Cannot create Player Abstract class.")
         self.color = color
 
-    def get_move(self, game:"Game") -> str:
+    def get_move(self, game: Game) -> str:
         """Makes the agent to make a move in the game. The agent should also
         pass the turn when it finishes (aka. notify the other players).
         """
-        raise Exception('Abstract class.')
+        raise Exception("Abstract class.")

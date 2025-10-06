@@ -1,17 +1,17 @@
+import argparse
+import os
+
 from agent import Agent
 from dataset import DatasetGame
 from game import Game
 from lib.logger import Logger
 from lib.model import get_model_path
 
-import argparse
-import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 
 def train(model_dir, dataset_path, epochs=1, batch_size=8):
-    """ Loads (or creates, if not found) a model from model_dir, trains it
+    """Loads (or creates, if not found) a model from model_dir, trains it
     and saves the results.
 
     Parameters:
@@ -36,29 +36,38 @@ def train(model_dir, dataset_path, epochs=1, batch_size=8):
         chess_agent.load(model_path)
     except OSError:
         logger.warning("Model not found, training a fresh one.")
-    chess_agent.train(data_train, logdir=model_dir, epochs=epochs,
-                      validation_split=0.25, batch_size=batch_size)
+    chess_agent.train(
+        data_train,
+        logdir=model_dir,
+        epochs=epochs,
+        validation_split=0.25,
+        batch_size=batch_size,
+    )
     logger.info("Saving the agent...")
     new_model_path = get_model_path(model_dir, increment=True)
     chess_agent.save(new_model_path)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Plays some chess games,"
-                                     "stores the result and trains a model.")
-    parser.add_argument('model_dir', metavar='modeldir',
-                        help="where to store (and load from)"
-                        "the trained model and the logs")
-    parser.add_argument('data_path', metavar='datadir',
-                        help="Path of .JSON dataset.")
-    parser.add_argument('--epochs', metavar='epochs', type=int,
-                        default=1)
-    parser.add_argument('--bs', metavar='bs', help="Batch size. Default 8", type=int,
-                        default=8)
-    parser.add_argument('--debug',
-                        action='store_true',
-                        default=False,
-                        help="Log debug messages on screen. Default false.")
+    parser = argparse.ArgumentParser(
+        description="Plays some chess games,stores the result and trains a model."
+    )
+    parser.add_argument(
+        "model_dir",
+        metavar="modeldir",
+        help="where to store (and load from)the trained model and the logs",
+    )
+    parser.add_argument("data_path", metavar="datadir", help="Path of .JSON dataset.")
+    parser.add_argument("--epochs", metavar="epochs", type=int, default=1)
+    parser.add_argument(
+        "--bs", metavar="bs", help="Batch size. Default 8", type=int, default=8
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Log debug messages on screen. Default false.",
+    )
 
     args = parser.parse_args()
 

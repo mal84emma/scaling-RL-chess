@@ -1,5 +1,4 @@
 import json
-import numpy as np
 
 from .game import Game
 
@@ -10,8 +9,9 @@ class GameDataset(object):
     serialize/deserialize them as a JSON file. Also, it takes a game and
     returns it as the expanded game.
     """
+
     def __init__(self, games=None):
-        """ Builds a dataset.
+        """Builds a dataset.
         Parameters:
             games: List[Game]. List of games
         """
@@ -20,24 +20,22 @@ class GameDataset(object):
             self.games = games
 
     def augment_game(self, game_base):
-        """ Expands a game. For the N movements of a game, it creates
+        """Expands a game. For the N movements of a game, it creates
         N games with each state + the final result of the original game +
         the next movement (in each state).
         """
         hist = game_base.get_history()
-        moves = hist['moves']
-        result = hist['result']
-        date = hist['date']
-        p_color = hist['player_color']
+        moves = hist["moves"]
+        result = hist["result"]
+        date = hist["date"]
+        p_color = hist["player_color"]
 
         augmented = []
 
         g = Game(date=date, player_color=p_color)
 
         for m in moves:
-            augmented.append({'game': g,
-                              'next_move': m,
-                              'result': result})
+            augmented.append({"game": g, "next_move": m, "result": result})
             g = g.get_copy()
             g.move(m)
 
@@ -45,16 +43,16 @@ class GameDataset(object):
 
     def load(self, path):
         games_file = None
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             games_file = f.read()
         self.loads(games_file)
 
     def loads(self, string):
         gamess = json.loads(string)
         for item in gamess:
-            g = Game(date=item['date'], player_color=item['player_color'])
-            if len(item['moves']) > 0:
-                for m in item['moves']:
+            g = Game(date=item["date"], player_color=item["player_color"])
+            if len(item["moves"]) > 0:
+                for m in item["moves"]:
                     g.move(m)
                 self.games.append(g)
 
@@ -70,13 +68,13 @@ class GameDataset(object):
         games = [x.get_history() for x in union_games]
 
         dstr = json.dumps(games)
-        dstr = dstr.replace('},', '},\n')
+        dstr = dstr.replace("},", "},\n")
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(dstr)
 
     def append(self, other):
-        """ Appends a game (or another Dataset) to this one"""
+        """Appends a game (or another Dataset) to this one"""
         if isinstance(other, Game):
             self.games.append(other)
         elif isinstance(other, GameDataset):
@@ -87,12 +85,12 @@ class GameDataset(object):
         return json.dumps(games)
 
     def __add__(self, other):
-        """ Appends a game (or another Dataset) to this one"""
+        """Appends a game (or another Dataset) to this one"""
         self.append(other)
         return self
 
     def __iad__(self, other):
-        """ Appends a game (or another Dataset) to this one"""
+        """Appends a game (or another Dataset) to this one"""
         return self.__add__(other)
 
     def __len__(self):

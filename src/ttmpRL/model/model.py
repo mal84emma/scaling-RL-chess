@@ -1,28 +1,38 @@
-"""
-This module contains the neural network model used by the agent to make
-decisions.
-"""
+"""This module contains the neural network model used by the agent to ..."""
 
-from keras.layers import (Dense, Conv2D, BatchNormalization,
-                                     Activation, Flatten, Input, Add)
-from keras.optimizers import Adam
-from keras.losses import mean_squared_error, categorical_crossentropy
 from keras import Model
-from keras.callbacks import TensorBoard, EarlyStopping, LearningRateScheduler, BackupAndRestore
 from keras import backend as K
+from keras.callbacks import (
+    BackupAndRestore,
+    EarlyStopping,
+    # LearningRateScheduler,
+    TensorBoard,
+)
+from keras.layers import (
+    Activation,
+    Add,
+    BatchNormalization,
+    Conv2D,
+    Dense,
+    Flatten,
+    Input,
+)
+from keras.losses import categorical_crossentropy, mean_squared_error
+from keras.optimizers import Adam
 
 
 def lr_scheduler(epoch, lr):
+    """Learning rate scheduler."""
     if epoch > 1:
-        return lr*0.9
+        return lr * 0.9
     return lr
 
 
 class ChessModel(object):
+    """ToDo."""
 
     def __init__(self, compile_model=True, weights=None):
-        """
-        Creates the model. This code builds a ResNet that will act as both
+        """Creates the model. This code builds a ResNet that will act as both
         the policy and value network (see AlphaZero paper for more info).
 
         Parameters:
@@ -36,23 +46,32 @@ class ChessModel(object):
         """
         inp = Input((8, 8, 127))
 
-        x = Conv2D(filters=256, kernel_size=3, strides=1, padding='same', # TODO: 'same' padding is suuuper strange
-                   kernel_regularizer='l2')(inp)
+        x = Conv2D(
+            filters=256,
+            kernel_size=3,
+            strides=1,
+            padding="same",  # TODO: 'same' padding is suuuper strange
+            kernel_regularizer="l2",
+        )(inp)
 
         for i in range(10):
             x = self.__res_block(x)
 
         # Policy Head - potentially unnecessary complications
         # alternatively could tree search over value function with given depth
-        pol_head = Conv2D(filters=2, kernel_size=1, padding='valid',
-                          strides=1,
-                          kernel_regularizer='l2')(x)
+        pol_head = Conv2D(
+            filters=2,
+            kernel_size=1,
+            padding="valid",
+            strides=1,
+            kernel_regularizer="l2",
+        )(x)
         pol_head = BatchNormalization(axis=-1)(pol_head)
         pol_head = Activation("relu")(pol_head)
         pol_head = Flatten()(pol_head)
-        pol_head = Dense(1968, kernel_regularizer='l2',
-                         activation='softmax',
-                         name='policy_out')(pol_head)
+        pol_head = Dense(
+            1968, kernel_regularizer="l2", activation="softmax", name="policy_out"
+        )(pol_head)
 
         # Value Head
         # this can be trained on Stockfish evaluation of position
@@ -61,17 +80,20 @@ class ChessModel(object):
         # you don't need to learn all of chess, you just need to learn
         # the positions that you are likely to encounter (Lichess has these
         # with their stockfish scores)
-        val_head = Conv2D(filters=1,
-                          strides=1,
-                          kernel_size=1, padding='valid',
-                          kernel_regularizer='l2')(x)
+        val_head = Conv2D(
+            filters=1,
+            strides=1,
+            kernel_size=1,
+            padding="valid",
+            kernel_regularizer="l2",
+        )(x)
         val_head = BatchNormalization(axis=-1)(val_head)
         val_head = Activation("relu")(val_head)
         val_head = Flatten()(val_head)
-        val_head = Dense(256, kernel_regularizer='l2',
-                         activation='relu')(val_head)
-        val_head = Dense(1, kernel_regularizer='l2', activation='tanh',
-                         name='value_out')(val_head)
+        val_head = Dense(256, kernel_regularizer="l2", activation="relu")(val_head)
+        val_head = Dense(
+            1, kernel_regularizer="l2", activation="tanh", name="value_out"
+        )(val_head)
 
         self.model = Model(inp, [pol_head, val_head])
 
@@ -80,10 +102,11 @@ class ChessModel(object):
             self.model.load_weights(weights)
 
         if compile_model:
-            self.model.compile(Adam(learning_rate=0.002),
-                               loss=['categorical_crossentropy',
-                                     'mean_squared_error'],
-                               metrics={'policy_out': 'accuracy'})
+            self.model.compile(
+                Adam(learning_rate=0.002),
+                loss=["categorical_crossentropy", "mean_squared_error"],
+                metrics={"policy_out": "accuracy"},
+            )
 
     def predict(self, inp):
         return self.model.predict(inp, verbose=None)
@@ -102,23 +125,24 @@ class ChessModel(object):
     def train_generator(self, generator, epochs=1, logdir=None, val_gen=None):
         callbacks = []
         if logdir is not None:
-            tensorboard_callback = TensorBoard(log_dir=logdir,
-                                               histogram_freq=0,
-                                               write_graph=False,
-                                               update_freq=1)
+            tensorboard_callback = TensorBoard(
+                log_dir=logdir, histogram_freq=0, write_graph=False, update_freq=1
+            )
             callbacks.append(tensorboard_callback)
 
-        callbacks.append(EarlyStopping(monitor='val_loss',
-                                       patience=3,
-                                       restore_best_weights=True))
-        #callbacks.append(LearningRateScheduler(lr_scheduler, verbose=1))
-        callbacks.append(BackupAndRestore(backup_dir='../../data/models/train_backup'))
+        callbacks.append(
+            EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)
+        )
+        # callbacks.append(LearningRateScheduler(lr_scheduler, verbose=1))
+        callbacks.append(BackupAndRestore(backup_dir="../../data/models/train_backup"))
 
-        self.model.fit(generator,
-                        epochs=epochs,
-                        validation_data=val_gen,
-                        verbose=1,
-                        callbacks=callbacks)
+        self.model.fit(
+            generator,
+            epochs=epochs,
+            validation_data=val_gen,
+            verbose=1,
+            callbacks=callbacks,
+        )
 
     def __del__(self):
         K.clear_session()
@@ -127,17 +151,24 @@ class ChessModel(object):
         policy_pred, val_pred = y_pred[0], y_pred[1]
         policy_true, val_true = y_true[0], y_true[1]
 
-        return mean_squared_error(val_true, val_pred) - \
-            categorical_crossentropy(policy_true, policy_pred)
+        return mean_squared_error(val_true, val_pred) - categorical_crossentropy(
+            policy_true, policy_pred
+        )
 
     def __res_block(self, block_input):
-        """ Builds a residual block """
-        x = Conv2D(filters=256, kernel_size=3, padding="same", strides=1,
-                   kernel_regularizer='l2')(block_input)
+        """Builds a residual block"""
+        x = Conv2D(
+            filters=256,
+            kernel_size=3,
+            padding="same",
+            strides=1,
+            kernel_regularizer="l2",
+        )(block_input)
         x = BatchNormalization(axis=-1)(x)
         x = Activation("relu")(x)
-        x = Conv2D(filters=256, kernel_size=3, padding="same",
-                   kernel_regularizer='l2')(x)
+        x = Conv2D(filters=256, kernel_size=3, padding="same", kernel_regularizer="l2")(
+            x
+        )
         x = BatchNormalization(axis=-1)(x)
         x = Add()([block_input, x])
         x = Activation("relu")(x)
