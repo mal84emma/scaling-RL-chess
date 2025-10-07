@@ -53,12 +53,14 @@ class StockfishScorer(Scorer):
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         self.limit: Limit = Limit(time=thinking_time, depth=search_depth)
 
-    def score_position(self, game: Game) -> dict:
+    def score_position(self, game: Game, cp_only=True) -> dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn.
 
         Args:
             game: An object of the Game class which describes a game position
+            cp_only: Whether to return only `cp_score` as float for easier
+                interfacing.
 
         Returns:
             scores: A dictionary of scores which has the following key value
@@ -76,6 +78,9 @@ class StockfishScorer(Scorer):
         scores = self.engine.analyse(game.board, self.limit)["score"]
         cp_score = scores.pov(game.board.turn).score(mate_score=1500)
         score_rate = scores.wdl().pov(game.board.turn).expectation()
+
+        if cp_only:
+            return cp_score
 
         return {"cp": cp_score, "rate": score_rate}
 
