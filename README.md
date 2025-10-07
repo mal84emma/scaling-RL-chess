@@ -22,16 +22,8 @@ If you want to reuse this code on your project, and have any doubt [here](https:
 - Current base model settings (`modela`):
    - ToDo
 
-- introduced `move_quality` parameter to Stockfish player to allow it to play worse moves (to simulate lower Elo opponents) - need to add some stochasticity for the predictions to avoid all the simulated games being the same
-- I think if the original policy is crap, you don't really get any information out of the model predictions. It's also possible this approach isn't super powerful for chess because the state space is so unbelievably huge, so we can't explore a meaningful portion of the possible futures
-- when predicting games, because the policy is deterministic, the first move is always the same, which means all the training data has the same opening move, which is bad, how can I introduce a bit of exploration to this first move? we also want a bit of randomness in stockfish as well to avoid all games being the same, maybe the training_mode flag is good enough?
-- what if we accumulated training over the game? I.e. didn't reset the agent after each move
-
-- starting chess games is suuuuper hard, openings are crazy, it might be good to start test games using an opening book to get into a reasonable position and not get absolutely destroyed in the first 10 moves
-
 ## Open issues
 
-- Work out how to evaluate game performance, i.e. how good the play of a model is in a way other than naively playing another model
 - Implement the test-time MPC fine-tuning strategy (use new class and overload `predict` method) - aim for 2-3 mins per move to mimic 90min format classical chess
 - Think about how this strategy differs from the MCTS used by AlphaZero (it's kind of exploring the future in a similar way, i.e. on-policy-ish, but maybe having access to an opponent engine is the difference c.f. the need to self-play)
 

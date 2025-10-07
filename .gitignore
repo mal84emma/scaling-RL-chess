@@ -1,8 +1,7 @@
 # MacOS system files
 .DS_Store
 
-# Notes & notebooks
-NOTES.md
+# Notebooks
 ./notebooks/*
 
 # Data files
