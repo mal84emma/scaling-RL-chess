@@ -1,17 +1,15 @@
 import logging
 from typing import Protocol
 
-import chess.engine
+import chess
 from chess.engine import Limit, SimpleEngine
-
-from .game import Game
 
 # Remove annoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
 class Scorer(Protocol):
-    def score_position(self, game: Game) -> int | dict:
+    def score_position(self, board: chess.Board) -> int | dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn."""
         ...
@@ -45,17 +43,17 @@ class StockfishScorer:
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         self.limit: Limit = Limit(time=thinking_time, depth=search_depth)
 
-    def score_position(self, game: Game, cp_only=True) -> dict:
+    def score_position(self, board: chess.Board, cp_only: bool = True) -> dict:
         """Evaluates the strength of a board position for the player that is
         about to take a turn.
 
         Args:
-            game: An object of the Game class which describes a game position
-            cp_only: Whether to return only `cp_score` as float for easier
+            board: chess.Board. The board position to evaluate.
+            cp_only: bool, Whether to return only `cp_score` as float for easier
                 interfacing.
 
         Returns:
-            scores: A dictionary of scores which has the following key value
+            scores: dict, A dictionary of scores which has the following key value
                    pairs; {'cp': cp_score, 'rate': score_rate}
 
         The scoring provides two different evaluations:
@@ -67,9 +65,9 @@ class StockfishScorer:
         - https://python-chess.readthedocs.io/en/latest/engine.html#chess.engine.Score
         """
 
-        scores = self.engine.analyse(game.board, self.limit)["score"]
-        cp_score = scores.pov(game.board.turn).score(mate_score=1500)
-        score_rate = scores.wdl().pov(game.board.turn).expectation()
+        scores = self.engine.analyse(board, self.limit)["score"]
+        cp_score = scores.pov(board.turn).score(mate_score=1500)
+        score_rate = scores.wdl().pov(board.turn).expectation()
 
         if cp_only:
             return cp_score

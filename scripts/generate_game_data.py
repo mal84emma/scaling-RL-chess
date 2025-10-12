@@ -14,12 +14,12 @@ from chessrl.dataset import GameDataset
 from chessrl.utils import Logger
 
 
-def play_game(stockfish_bin, dataset, tqbar=None):
+def play_game(stockfish_binary, dataset, tqbar=None):
     """ToDo."""
     # TODO: add sampling of ELOs to make games different
-    white_stockfish = Stockfish(chess.WHITE, stockfish_bin, elo=3000)
-    # black_stockfish = Stockfish(chess.BLACK, stockfish_bin)
-    black_stockfish = Agent(chess.BLACK, stockfish_bin=stockfish_bin)
+    white_stockfish = Stockfish(chess.WHITE, stockfish_binary, elo=3000)
+    # black_stockfish = Stockfish(chess.BLACK, stockfish_binary)
+    black_stockfish = Agent(chess.BLACK, stockfish_binary=stockfish_binary)
 
     game = Game(white_player=white_stockfish, black_player=black_stockfish)
 
@@ -36,7 +36,7 @@ def play_game(stockfish_bin, dataset, tqbar=None):
     black_stockfish.close()
 
 
-def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
+def gen_data(stockfish_binary, save_path, num_games=100, workers=2):
     """ToDo."""
     logger = Logger.get_instance()
     d = GameDataset()
@@ -48,11 +48,11 @@ def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
         for _ in range(num_games):
             executor.submit(
                 play_game,
-                stockfish_bin=stockfish_bin,
+                stockfish_binary=stockfish_binary,
                 dataset=d,
                 tqbar=pbar,
             )
-    # play_game(stockfish_bin=stockfish_bin, dataset=d, tqbar=pbar)
+    # play_game(stockfish_binary=stockfish_binary, dataset=d, tqbar=pbar)
 
     pbar.close()
     logger.info("Saving dataset...")
@@ -65,7 +65,7 @@ def main():
         description="Plays some chess games,stores the result and trains a model."
     )
     parser.add_argument(
-        "stockfish_bin", metavar="stockbin", help="Stockfish binary path"
+        "stockfish_binary", metavar="stockbin", help="Stockfish binary path"
     )
     parser.add_argument("data_path", metavar="datadir", help="Path of .JSON dataset.")
     parser.add_argument("--games", metavar="games", type=int, default=10)
@@ -91,7 +91,7 @@ def main():
     if args.debug:
         logger.set_level(0)
 
-    gen_data(args.stockfish_bin, args.data_path, args.games, args.workers)
+    gen_data(args.stockfish_binary, args.data_path, args.games, args.workers)
 
 
 if __name__ == "__main__":

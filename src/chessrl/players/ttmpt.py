@@ -9,7 +9,7 @@ from timeit import default_timer as timer
 import numpy as np
 from tqdm import tqdm
 
-# from chessrl import Game
+import chessrl.game as game
 from chessrl.dataset import GameDataset
 from chessrl.utils import Logger
 
@@ -18,33 +18,34 @@ from .agent import Agent
 
 # TODO: this needs serious reworking to implement the new tuning strategy
 def _playout_and_save_game(
-    dataset: GameDataset, starting_game, agent: Agent, stockfish_bin
+    dataset: GameDataset,
+    starting_game,
+    agent: Agent,
+    stockfish_binary: str,
 ) -> GameDataset:
     """Get agent to play out game against stockfish, starting from particular
     position, and add to dataset."""
 
     logger = Logger.get_instance()
 
-    # tmp_game = Game(
-    #     board=starting_game.board.copy(),
-    #     player_color=starting_game.player_color,
-    #     stockfish=stockfish_bin,
-    #     stockfish_depth=10,
-    #     stockfish_rand_depth=True,
-    # )
-    tmp_game = None
+    tmp_board = game.get_board_copy(starting_game)
+    ...
+    white_player = agent
+    black_player = ...
 
     # play game
     try:
-        while tmp_game.get_result() is None:
-            agent_move = agent.get_move(tmp_game, real_game=True)
-            tmp_game.move(agent_move)
+        while game.get_result(tmp_board) is None:
+            agent_move = agent.get_move(tmp_board, real_game=True)
+            game.move(tmp_board, agent_move)
 
     except Exception:
         logger.error(traceback.format_exc())
 
-    dataset.append(tmp_game)
-    tmp_game.close()
+    dataset.append(tmp_board)
+
+    white_player.close()
+    black_player.close()
     # will also need to close the scorer object (if stockfish is used there)
 
     return dataset
@@ -104,7 +105,7 @@ class TTAgent(Agent):
                     dataset=dataset,
                     starting_game=game,
                     agent=tmp_agent,
-                    stockfish_bin=self.ttsf_bin,
+                    stockfish_binary=self.ttsf_bin,
                 )
             dataset.save("../../data/tmp.json")
 

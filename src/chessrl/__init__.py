@@ -9,3 +9,5 @@ from .players import *
 from .scorer import *
 
 STOCKFISH_DIR = "..."  # constants from package are useful
+
+NULL_MOVE = "00000"

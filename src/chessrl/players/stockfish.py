@@ -2,12 +2,8 @@ from __future__ import annotations
 
 __all__ = ("Stockfish",)
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from chessrl import Game
-
 import logging
+import os
 import random
 
 import chess
@@ -29,13 +25,13 @@ class Stockfish(Player):
 
     def __init__(
         self,
-        color: bool,
-        binary_path: str,
+        color: chess.WHITE | chess.BLACK,
+        binary_path: str | os.PathLike,
         thinking_time=0.1,
         search_depth=10,
         elo=1320,
     ):
-        super().__init__(color)
+        self.color = color
 
         self.engine: SimpleEngine = SimpleEngine.popen_uci(binary_path)
         # print(list(self.engine.options))
@@ -46,15 +42,15 @@ class Stockfish(Player):
 
         self.elo = elo
 
-    def get_move(self, game: Game) -> str:
-        assert game.turn == self.color, "It's not Stockfish's turn to play."
+    def get_move(self, board: chess.Board) -> str:
+        assert board.turn == self.color, "It's not Stockfish's turn to play."
 
-        result = self.engine.play(game.board, self.limit)
+        result = self.engine.play(board, self.limit)
         move = result.move.uci()
 
         # add a bit of stochasticity to Stockfish's move choice, select move
         # either one better or one worse than given elo choice randomly
-        variations = self.engine.analyse(game.board, self.limit, multipv=50)
+        variations = self.engine.analyse(board, self.limit, multipv=50)
         move_variations = [v["pv"][0].uci() for v in variations]
 
         if move in move_variations:

@@ -10,16 +10,14 @@ from __future__ import annotations
 
 __all__ = ("get_game_state",)
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from chessrl import Game
-
 import chess
 import numpy as np
 
 
-def _get_pieces_one_hot(board, color=False):
+def _get_pieces_one_hot(
+    board: chess.Board,
+    color: chess.WHITE | chess.BLACK,
+):
     """Returns a 3D-matrix representation of the pieces for one color.
     The matrix ins constructed as follows:
         8x8 (Chess board) x 6 possible pieces. = 384.
@@ -54,8 +52,8 @@ def _get_pieces_planes(board: chess.Board):
     # https://www.chessprogramming.org/Board_Representation#FEN_Board_Representation
 
     # get one-hot encoding of pieces for each color
-    black_pieces = _get_pieces_one_hot(board, color=False)
-    white_pieces = _get_pieces_one_hot(board, color=True)
+    black_pieces = _get_pieces_one_hot(board, color=chess.BLACK)
+    white_pieces = _get_pieces_one_hot(board, color=chess.WHITE)
     # concatenate
     # NOTE empty squares are implied where there are no pieces of either color
     all_pieces = np.concatenate([white_pieces, black_pieces], axis=-1)
@@ -145,17 +143,16 @@ def _get_game_history(board, T=8):
 '''
 
 
-def get_game_state(game: Game):
+def get_game_state(board: chess.Board):
     """This method returns the matrix representation of a game with its
     history of moves.
 
     Parameters:
-        game: Game. Game state.
+        board: chess.Board. Board object representing current state.
     Returns:
         game_state: numpy array. 3D Matrix with dimensions 8x8x[14(T+1)]. Where T
         corresponds to the number of backward turns in time.
     """
-    board = game.board
 
     pieces = _get_pieces_planes(board)
     side_to_move = _get_side_to_move_plane(board)

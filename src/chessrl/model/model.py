@@ -21,8 +21,6 @@ from keras.layers import (
 from keras.losses import categorical_crossentropy, mean_squared_error
 from keras.optimizers import Adam
 
-from chessrl.scorer import Scorer
-
 
 def lr_scheduler(epoch, lr):
     """Learning rate scheduler."""
@@ -31,7 +29,7 @@ def lr_scheduler(epoch, lr):
     return lr
 
 
-class ChessModel(Scorer):
+class ChessModel:
     """ToDo."""
 
     def __init__(self, compile_model=True, weights=None):
