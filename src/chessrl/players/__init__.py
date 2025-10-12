@@ -1,4 +1,9 @@
-__all__ = ("agent", "player", "stockfish", "ttmpt")
+__all__ = (
+    "Agent",
+    "Stockfish",
+    "Player",
+    "ttmpt",
+)
 
 from . import agent, player, stockfish, ttmpt
 from .agent import *

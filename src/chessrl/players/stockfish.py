@@ -10,8 +10,6 @@ import chess
 import chess.engine
 from chess.engine import Limit, SimpleEngine
 
-from .player import Player
-
 # Remove anoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
@@ -20,7 +18,7 @@ def _clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
 
-class Stockfish(Player):
+class Stockfish:
     """AI using Stockfish to play a game of chess."""
 
     def __init__(

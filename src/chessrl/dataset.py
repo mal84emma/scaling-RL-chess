@@ -1,3 +1,5 @@
+__all__ = ("GameDataset",)
+
 import json
 from typing import List
 
@@ -68,7 +70,7 @@ class GameDataset(object):
 
         union_games = dataset_existent.games + self.games
 
-        games = [x.get_history() for x in union_games]
+        games = [game.get_history(b) for b in union_games]
 
         dstr = json.dumps(games)
         dstr = dstr.replace("},", "},\n")

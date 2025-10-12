@@ -6,28 +6,37 @@ from concurrent.futures import ThreadPoolExecutor
 import chess
 from tqdm import tqdm
 
-# import ttmpRL and using ttmpRL.Agent might be clearer
-# as this makes it clear where the object is coming from
-# and whether you've written it
-from chessrl import Agent, Game, Stockfish
-from chessrl.dataset import GameDataset
+import chessrl
+import chessrl.game as game
+from chessrl import Agent, GameDataset, Stockfish
 from chessrl.utils import Logger
 
 
 def play_game(stockfish_binary, dataset, tqbar=None):
     """ToDo."""
     # TODO: add sampling of ELOs to make games different
-    white_stockfish = Stockfish(chess.WHITE, stockfish_binary, elo=3000)
+    white_stockfish: chessrl.Player = Stockfish(
+        chess.WHITE,
+        stockfish_binary,
+        elo=3000,
+    )
     # black_stockfish = Stockfish(chess.BLACK, stockfish_binary)
-    black_stockfish = Agent(chess.BLACK, stockfish_binary=stockfish_binary)
+    black_stockfish: chessrl.Player = Agent(
+        chess.BLACK,
+        stockfish_binary=stockfish_binary,
+    )
 
-    game = Game(white_player=white_stockfish, black_player=black_stockfish)
+    board = game.get_new_board()
 
     # play out game
-    while game.get_result() is None:
-        game.next_move()
+    while game.get_result(board) is None:
+        game.next_move(
+            board,
+            white_stockfish,
+            black_stockfish,
+        )
 
-    dataset.append(game)
+    dataset.append(board)
     if tqbar is not None:
         tqbar.update(1)
 

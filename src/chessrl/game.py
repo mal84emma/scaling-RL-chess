@@ -27,19 +27,19 @@ def get_game_len(board: chess.Board) -> int:
     return len(board.move_stack)
 
 
-def get_legal_moves(self, final_states=False):
+def get_legal_moves(board: chess.Board, final_states=False):
     """Gets a list of legal moves in the current turn.
     Parameters:
         final_states: bool. Whether copies of the board after executing
         each legal movement are returned.
     """
-    moves = [m.uci() for m in self.board.legal_moves]
+    moves = [m.uci() for m in board.legal_moves]
     if final_states:
         states = []
         for m in moves:
-            gi = self.get_copy()
-            gi.move(m)
-            states.append(gi)
+            tmp_board = get_board_copy(board)
+            move(tmp_board, m)
+            states.append(tmp_board)
         moves = (moves, states)
     return moves
 
@@ -59,7 +59,7 @@ def next_move(
     movement = player_to_move.get_move(board)
 
     if make_move:
-        move(movement)
+        move(board, movement)
 
     return movement
 
@@ -72,7 +72,7 @@ def move(board: chess.Board, movement: str):
         movement: str, Movement in UCI notation (e.g. f2f3 or g8f6).
     """
     player_color = chess.COLOR_NAMES[board.turn]
-    assert movement in get_legal_moves(), (
+    assert movement in get_legal_moves(board), (
         f"{player_color} player tried to make an illegal move: {movement}"
     )
 
@@ -92,8 +92,8 @@ def get_board_fen(board: chess.Board):
     return board.board_fen()
 
 
-def set_fen(self, fen):
-    self.board.set_board_fen(fen)
+def set_fen(board: chess.Board, fen: str):
+    board.set_board_fen(fen)
     return
 
 
