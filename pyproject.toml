@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chessrl"
+version = "0.0.1"
+dependencies = [
+  "cairosvg==2.8.2",
+  "chess==1.11.2",
+  "matplotlib==3.10.6",
+  "numpy==1.26.4",
+  "Pillow==11.3.0",
+  "tqdm==4.67.1",
+  "seaborn==0.13.2",
+]
+authors = [{ name = "Max", email = "mal84@cam.ac.uk" }]
+description = "Test-time scaling RL using MPC for chess"
+license = "MIT AND (Apache-2.0 OR BSD-2-Clause)"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = ["Development Status :: 2 - Pre-Alpha"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.format]
+exclude = [".*.egg-info", "requirements/**"]
+#skip-magic-trailing-comma = true # magic trailing comma break long arg lines into vertical format
+
+[tool.ruff.lint]
+# Run security (S), isort (I) and flake8-style (F) checks.
+select = ["S", "I", "F"]
+# S101: Allow bare asserts, we're researchers...
+# Ignore loose imports: https://www.flake8rules.com/rules/F403.html
+ignore = ["S101", "S311", "S108", "F403"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10
+
+# Ignore `E402` (import violations) and `F401` (unused imports) in all `__init__.py` files
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "D104"]
+"*.ipynb" = ["E402"]
+"tests/*" = ["D"]
+"docs/examples/*" = ["D"]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 200
+ignore-overlong-task-comments = true
