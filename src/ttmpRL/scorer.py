@@ -1,4 +1,5 @@
 import logging
+from typing import Protocol
 
 import chess.engine
 from chess.engine import Limit, SimpleEngine
@@ -9,30 +10,18 @@ from .game import Game
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
-class Scorer(object):
-    """This class represents contains the necessary methods all chess
-    scorer objects must implement.
-    """
-
-    def __init__(self):
-        if type(self) is Scorer:
-            raise Exception("Cannot create Scorer Abstract class.")
-
-    def score_position(self, game: Game) -> dict:  # noqa: E0602, F821
+class Scorer(Protocol):
+    def score_position(self, game: Game) -> int | dict:
         """Evaluates the strength of a board position for the player that is
-        about to take a turn.
+        about to take a turn."""
+        ...
 
-        Args:
-            game: An object of the Game class which describes a game position
-
-        Returns:
-            scores: A dictionary of scores which has the following key value
-                   pairs; {'cp': cp_score, 'rate': score_rate}
-        """
-        raise Exception("Abstract class.")
+    def close(self) -> None:
+        """Close connections to resources."""
+        ...
 
 
-class StockfishScorer(Scorer):
+class StockfishScorer:
     """A chess position scorer that uses the Stockfish engine to evaluate positions.
 
     This class uses a Stockfish chess engine instance to calculate board position
@@ -40,7 +29,10 @@ class StockfishScorer(Scorer):
     """
 
     def __init__(
-        self, binary_path: str, thinking_time: float = 0.01, search_depth: int = 10
+        self,
+        binary_path: str,
+        thinking_time: float = 0.01,
+        search_depth: int = 10,
     ):
         """Initialize the ScorerStockfish with a Stockfish engine.
 

@@ -1,23 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+__all__ = ("Player",)
+
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from ttmpRL import Game
 
 
-class Player(object):
-    """This class represents contains the necessary methods all chess
-    player objects must implement.
-    """
-
-    def __init__(self, color):
-        if type(self) is Player:
-            raise Exception("Cannot create Player Abstract class.")
-        self.color = color
+class Player(Protocol):
+    color: bool
 
     def get_move(self, game: Game) -> str:
-        """Makes the agent to make a move in the game. The agent should also
-        pass the turn when it finishes (aka. notify the other players).
+        """Gets the move the player wants to make for the given
+        game position in UCI notation (e.g. f2f3 or g8f6).
         """
-        raise Exception("Abstract class.")
+        ...
