@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+__all__ = ("Stockfish",)
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,7 +20,7 @@ from .player import Player
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
 
-def clamp(n, minn, maxn):
+def _clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
 
@@ -59,7 +61,7 @@ class Stockfish(Player):
             move_index = move_variations.index(move)
             if random.random() <= 0.5:
                 increment = random.choice([-1, 1])
-                move_index = clamp(move_index + increment, 0, len(move_variations) - 1)
+                move_index = _clamp(move_index + increment, 0, len(move_variations) - 1)
                 move = move_variations[move_index]
 
         return move

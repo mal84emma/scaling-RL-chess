@@ -1,5 +1,7 @@
 """Defines chess related utility functions."""
 
+__all__ = ("get_uci_labels",)
+
 
 def get_uci_labels():
     """Returns a list of possible moves encoded as UCI (including

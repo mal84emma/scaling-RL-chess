@@ -1,6 +1,8 @@
 """Implemention of chess agent using test-time scaling using model predictions,
 Test-Time Model Predictive Tuning (TTMPT)."""
 
+__all__ = ("TTAgent",)
+
 import traceback
 from timeit import default_timer as timer
 
@@ -14,7 +16,8 @@ from ttmpRL.utils import Logger
 from .agent import Agent
 
 
-def playout_and_save_game(
+# TODO: this needs serious reworking to implement the new tuning strategy
+def _playout_and_save_game(
     dataset: GameDataset, starting_game: Game, agent: Agent, stockfish_bin
 ) -> GameDataset:
     """Get agent to play out game against stockfish, starting from particular
@@ -96,7 +99,7 @@ class TTAgent(Agent):
 
             # play lots of games from the curent board state onwards
             for _ in tqdm(range(self.tt_games), desc="Predicting games"):
-                dataset = playout_and_save_game(
+                dataset = _playout_and_save_game(
                     dataset=dataset,
                     starting_game=game,
                     agent=tmp_agent,

@@ -26,7 +26,7 @@ line-length = 88
 
 [tool.ruff.format]
 exclude = [".*.egg-info", "requirements/**"]
-skip-magic-trailing-comma = true
+#skip-magic-trailing-comma = true # magic trailing comma break long arg lines into vertical format
 
 [tool.ruff.lint]
 # Run security (S), isort (I) and flake8-style (F) checks.

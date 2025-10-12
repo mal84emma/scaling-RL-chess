@@ -6,6 +6,15 @@ with a neural network.
 DatasetGame to a Model.
 """
 
+from __future__ import annotations
+
+__all__ = ("get_game_state",)
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ttmpRL import Game
+
 import chess
 import numpy as np
 
@@ -31,7 +40,7 @@ def _get_pieces_one_hot(board, color=False):
     return mask
 
 
-def _get_pieces_planes(board):
+def _get_pieces_planes(board: chess.Board):
     """This method returns the matrix representation of a game turn
     (positions of the pieces of the two colors)
 
@@ -136,7 +145,7 @@ def _get_game_history(board, T=8):
 '''
 
 
-def get_game_state(game, flipped=False):
+def get_game_state(game: Game):
     """This method returns the matrix representation of a game with its
     history of moves.
 
@@ -161,7 +170,4 @@ def get_game_state(game, flipped=False):
         [pieces, side_to_move, castling_rights, en_passant], axis=-1
     )
 
-    # Why flip the board?
-    if flipped:
-        game_state = np.rot90(game_state, k=2)
     return game_state

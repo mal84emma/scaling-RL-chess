@@ -1,4 +1,4 @@
-"""ToDo."""
+"""Generate training games by playing two Stockfish models against each other."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -6,7 +6,10 @@ from concurrent.futures import ThreadPoolExecutor
 import chess
 from tqdm import tqdm
 
-from ttmpRL import Game, Stockfish
+# import ttmpRL and using ttmpRL.Agent might be clearer
+# as this makes it clear where the object is coming from
+# and whether you've written it
+from ttmpRL import Agent, Game, Stockfish
 from ttmpRL.dataset import GameDataset
 from ttmpRL.utils import Logger
 
@@ -14,14 +17,15 @@ from ttmpRL.utils import Logger
 def play_game(stockfish_bin, dataset, tqbar=None):
     """ToDo."""
     # TODO: add sampling of ELOs to make games different
-    white_stockfish = Stockfish(chess.WHITE, stockfish_bin)
-    black_stockfish = Stockfish(chess.BLACK, stockfish_bin)
+    white_stockfish = Stockfish(chess.WHITE, stockfish_bin, elo=3000)
+    # black_stockfish = Stockfish(chess.BLACK, stockfish_bin)
+    black_stockfish = Agent(chess.BLACK, stockfish_bin=stockfish_bin)
 
     game = Game(white_player=white_stockfish, black_player=black_stockfish)
 
     # play out game
     while game.get_result() is None:
-        game.move()
+        game.next_move()
 
     dataset.append(game)
     if tqbar is not None:
@@ -43,8 +47,12 @@ def gen_data(stockfish_bin, save_path, num_games=100, workers=2):
     with ThreadPoolExecutor(max_workers=workers) as executor:
         for _ in range(num_games):
             executor.submit(
-                play_game, stockfish_bin=stockfish_bin, dataset=d, tqbar=pbar
+                play_game,
+                stockfish_bin=stockfish_bin,
+                dataset=d,
+                tqbar=pbar,
             )
+    # play_game(stockfish_bin=stockfish_bin, dataset=d, tqbar=pbar)
 
     pbar.close()
     logger.info("Saving dataset...")

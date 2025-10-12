@@ -1,5 +1,7 @@
 """Helper functions for handling models."""
 
+__all__ = ("get_model_path",)
+
 import os
 
 

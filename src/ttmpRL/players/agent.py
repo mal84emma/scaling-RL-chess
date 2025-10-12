@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+__all__ = ("Agent",)
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

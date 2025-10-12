@@ -1,5 +1,7 @@
 """Defines a custom Logger to be used in all processes."""
 
+__all__ = ("Logger",)
+
 import logging
 
 

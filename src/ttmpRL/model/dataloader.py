@@ -1,3 +1,5 @@
+__all__ = ("GameDataSequence",)
+
 import numpy as np
 from keras.utils import Sequence, to_categorical
 
@@ -5,6 +7,14 @@ from ttmpRL.dataset import GameDataset
 from ttmpRL.utils import get_uci_labels
 
 from .encoder import get_game_state
+
+# need to figure out how to handle both training data generated from simulated
+# stockfish games, and training data that is generated at test-time which only
+# has position-score information.
+# this probably means I want to do a pre-processing of the training games,
+# maybe in the training script that preps them into a data loader, playing out
+# the games, scoring positions, and loading the position-score pairs into the
+# data loader.
 
 
 class GameDataSequence(Sequence):

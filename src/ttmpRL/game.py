@@ -16,6 +16,8 @@ from chess import Board
 from PIL import Image
 
 
+# TODO: Is this class redundant with chess.Board? all of the methods could be
+# implemented as pure functions operating on a chess.Board object
 class Game(object):
     NULL_MOVE = "00000"
 

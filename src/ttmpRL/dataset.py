@@ -20,6 +20,7 @@ class GameDataset(object):
             self.games = games
 
     def augment_game(self, game_base):
+        # TODO: I think this is no longer needed given how we're ingesting training data now
         """Expands a game. For the N movements of a game, it creates
         N games with each state + the final result of the original game +
         the next movement (in each state).

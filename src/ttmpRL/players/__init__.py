@@ -1,4 +1,7 @@
-from .agent import Agent
-from .player import Player
-from .stockfish import Stockfish
-from .ttmpt import TTAgent
+__all__ = ("agent", "player", "stockfish", "ttmpt")
+
+from . import agent, player, stockfish, ttmpt
+from .agent import *
+from .player import *
+from .stockfish import *
+from .ttmpt import *

@@ -1,5 +1,6 @@
 """This module contains the neural network model used by the agent to ..."""
 
+__all__ = ("ChessModel",)
 from keras import Model
 from keras import backend as K
 from keras.callbacks import (
@@ -52,7 +53,7 @@ class ChessModel(Scorer):
             filters=256,
             kernel_size=3,
             strides=1,
-            padding="same",  # TODO: 'same' padding is suuuper strange
+            padding="same",  # 'same' padding is odd, but apprently what people use
             kernel_regularizer="l2",
         )(inp)
 
@@ -105,7 +106,7 @@ class ChessModel(Scorer):
 
         if compile_model:
             self.model.compile(
-                Adam(learning_rate=0.002),
+                Adam(learning_rate=0.002),  # may need adjusting
                 loss=["categorical_crossentropy", "mean_squared_error"],
                 metrics={"policy_out": "accuracy"},
             )
