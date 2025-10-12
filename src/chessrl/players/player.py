@@ -5,7 +5,7 @@ __all__ = ("Player",)
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from ttmpRL import Game
+    from chessrl import Game
 
 
 class Player(Protocol):

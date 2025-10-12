@@ -5,7 +5,7 @@ __all__ = ("Stockfish",)
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ttmpRL import Game
+    from chessrl import Game
 
 import logging
 import random

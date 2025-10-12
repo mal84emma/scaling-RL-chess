@@ -13,7 +13,7 @@ __all__ = ("get_game_state",)
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ttmpRL import Game
+    from chessrl import Game
 
 import chess
 import numpy as np

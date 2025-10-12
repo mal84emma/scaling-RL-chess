@@ -7,14 +7,14 @@ __all__ = ("Agent",)
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ttmpRL import Game, Scorer
+    from chessrl import Game, Scorer
 
 import random
 
 import numpy as np
 
-import ttmpRL.model as model
-from ttmpRL.scorer import StockfishScorer
+import chessrl.model as model
+from chessrl.scorer import StockfishScorer
 
 from .player import Player
 

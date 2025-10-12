@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ttmpRL.players import Player
+    from chessrl.players import Player
 
 from datetime import datetime
 from io import BytesIO

@@ -3,8 +3,8 @@ __all__ = ("GameDataSequence",)
 import numpy as np
 from keras.utils import Sequence, to_categorical
 
-from ttmpRL.dataset import GameDataset
-from ttmpRL.utils import get_uci_labels
+from chessrl.dataset import GameDataset
+from chessrl.utils import get_uci_labels
 
 from .encoder import get_game_state
 

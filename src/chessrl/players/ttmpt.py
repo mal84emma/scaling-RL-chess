@@ -9,29 +9,30 @@ from timeit import default_timer as timer
 import numpy as np
 from tqdm import tqdm
 
-from ttmpRL import Game
-from ttmpRL.dataset import GameDataset
-from ttmpRL.utils import Logger
+# from chessrl import Game
+from chessrl.dataset import GameDataset
+from chessrl.utils import Logger
 
 from .agent import Agent
 
 
 # TODO: this needs serious reworking to implement the new tuning strategy
 def _playout_and_save_game(
-    dataset: GameDataset, starting_game: Game, agent: Agent, stockfish_bin
+    dataset: GameDataset, starting_game, agent: Agent, stockfish_bin
 ) -> GameDataset:
     """Get agent to play out game against stockfish, starting from particular
     position, and add to dataset."""
 
     logger = Logger.get_instance()
 
-    tmp_game = Game(
-        board=starting_game.board.copy(),
-        player_color=starting_game.player_color,
-        stockfish=stockfish_bin,
-        stockfish_depth=10,
-        stockfish_rand_depth=True,
-    )
+    # tmp_game = Game(
+    #     board=starting_game.board.copy(),
+    #     player_color=starting_game.player_color,
+    #     stockfish=stockfish_bin,
+    #     stockfish_depth=10,
+    #     stockfish_rand_depth=True,
+    # )
+    tmp_game = None
 
     # play game
     try:
@@ -67,7 +68,7 @@ class TTAgent(Agent):
         self.tt_games = tt_games
         self.ttt_iters = ttt_iters
 
-    def get_move(self, game: "Game", real_game=True, verbose=False) -> str:
+    def get_move(self, game, real_game=True, verbose=False) -> str:
         """Perform iterations of predicting games and fine-tuning
         the agent before selecting a move."""
 
@@ -88,7 +89,7 @@ class TTAgent(Agent):
 
         return move
 
-    def predict_and_tune(self, game: "Game") -> Agent:
+    def predict_and_tune(self, game) -> Agent:
         logger = Logger.get_instance()
 
         tmp_agent = self.clone()

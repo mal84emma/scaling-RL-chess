@@ -21,7 +21,7 @@ from keras.layers import (
 from keras.losses import categorical_crossentropy, mean_squared_error
 from keras.optimizers import Adam
 
-from ttmpRL.scorer import Scorer
+from chessrl.scorer import Scorer
 
 
 def lr_scheduler(epoch, lr):

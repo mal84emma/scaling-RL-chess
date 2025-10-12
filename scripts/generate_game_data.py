@@ -9,9 +9,9 @@ from tqdm import tqdm
 # import ttmpRL and using ttmpRL.Agent might be clearer
 # as this makes it clear where the object is coming from
 # and whether you've written it
-from ttmpRL import Agent, Game, Stockfish
-from ttmpRL.dataset import GameDataset
-from ttmpRL.utils import Logger
+from chessrl import Agent, Game, Stockfish
+from chessrl.dataset import GameDataset
+from chessrl.utils import Logger
 
 
 def play_game(stockfish_bin, dataset, tqbar=None):
