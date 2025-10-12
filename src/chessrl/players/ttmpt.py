@@ -6,12 +6,13 @@ __all__ = ("TTAgent",)
 import traceback
 from timeit import default_timer as timer
 
+import chess
 import numpy as np
 from tqdm import tqdm
 
 import chessrl.game as game
 from chessrl.dataset import GameDataset
-from chessrl.utils import Logger
+from chessrl.utils import Logger, UCIMove
 
 from .agent import Agent
 
@@ -69,7 +70,7 @@ class TTAgent(Agent):
         self.tt_games = tt_games
         self.ttt_iters = ttt_iters
 
-    def get_move(self, game, real_game=True, verbose=False) -> str:
+    def get_move(self, board: chess.Board) -> UCIMove:
         """Perform iterations of predicting games and fine-tuning
         the agent before selecting a move."""
 
@@ -78,8 +79,8 @@ class TTAgent(Agent):
 
         move = game.NULL_MOVE
 
-        tmp_agent = self.predict_and_tune(game)
-        policy = tmp_agent.predict_policy(game)
+        tmp_agent = self.predict_and_tune(board)
+        policy = tmp_agent.predict_policy(board)
         move = game.get_legal_moves()[np.argmax(policy)]
 
         timer_end = timer()
@@ -88,9 +89,9 @@ class TTAgent(Agent):
             f"### TTMP agent made move {move} in {round(timer_end - timer_start, 2)}s.\n"
         )
 
-        return move
+        return UCIMove(move)
 
-    def predict_and_tune(self, game) -> Agent:
+    def predict_and_tune(self, board: chess.Board) -> Agent:
         logger = Logger.get_instance()
 
         tmp_agent = self.clone()
@@ -103,7 +104,7 @@ class TTAgent(Agent):
             for _ in tqdm(range(self.tt_games), desc="Predicting games"):
                 dataset = _playout_and_save_game(
                     dataset=dataset,
-                    starting_game=game,
+                    starting_game=board,
                     agent=tmp_agent,
                     stockfish_binary=self.ttsf_bin,
                 )

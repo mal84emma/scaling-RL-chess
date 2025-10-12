@@ -1,4 +1,8 @@
-__all__ = ("chess", "logger")
+__all__ = (
+    "UCIMove",
+    "get_uci_labels",
+    "Logger",
+)
 
 from . import chess, logger
 from .chess import *

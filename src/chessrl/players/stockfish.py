@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __all__ = ("Stockfish",)
 
 import logging
@@ -9,6 +7,8 @@ import random
 import chess
 import chess.engine
 from chess.engine import Limit, SimpleEngine
+
+from chessrl.utils import UCIMove
 
 # Remove anoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
@@ -40,7 +40,7 @@ class Stockfish:
 
         self.elo = elo
 
-    def get_move(self, board: chess.Board) -> str:
+    def get_move(self, board: chess.Board) -> UCIMove:
         assert board.turn == self.color, "It's not Stockfish's turn to play."
 
         result = self.engine.play(board, self.limit)
@@ -58,7 +58,7 @@ class Stockfish:
                 move_index = _clamp(move_index + increment, 0, len(move_variations) - 1)
                 move = move_variations[move_index]
 
-        return move
+        return UCIMove(move)
 
     def close(self):
         """Close the connection to the engine."""

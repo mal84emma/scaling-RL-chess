@@ -3,8 +3,8 @@ __all__ = ("GameDataSequence",)
 import numpy as np
 from keras.utils import Sequence, to_categorical
 
+import chessrl
 from chessrl.dataset import GameDataset
-from chessrl.utils import get_uci_labels
 
 from .encoder import get_game_state
 
@@ -32,7 +32,7 @@ class GameDataSequence(Sequence):
     def __init__(self, dataset: GameDataset, batch_size: int = 8, random_flips=0):
         self.dataset = dataset
         self.batch_size = min(batch_size, len(dataset))
-        self.uci_ids = {u: i for i, u in enumerate(get_uci_labels())}
+        self.uci_ids = {u: i for i, u in enumerate(chessrl.UCI_MOVES)}
         self.random_flips = random_flips
 
     def __len__(self):

@@ -6,8 +6,6 @@ with a neural network.
 DatasetGame to a Model.
 """
 
-from __future__ import annotations
-
 __all__ = ("get_game_state",)
 
 import chess

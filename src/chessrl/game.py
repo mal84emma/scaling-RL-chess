@@ -1,12 +1,5 @@
 """Functions to play a chess game."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .players import Player
-
 from datetime import datetime
 from io import BytesIO
 
@@ -15,6 +8,9 @@ import chess
 import chess.svg
 import numpy as np
 from PIL import Image
+
+from .players import Player
+from .utils import UCIMove
 
 
 def get_new_board() -> chess.Board:
@@ -64,12 +60,12 @@ def next_move(
     return movement
 
 
-def move(board: chess.Board, movement: str):
+def move(board: chess.Board, movement: UCIMove):
     """Make a specified move.
 
     Params:
         board: chess.Board, Current board position.
-        movement: str, Movement in UCI notation (e.g. f2f3 or g8f6).
+        movement: UCIMove, Movement in UCI notation (e.g. f2f3 or g8f6).
     """
     player_color = chess.COLOR_NAMES[board.turn]
     assert movement in get_legal_moves(board), (

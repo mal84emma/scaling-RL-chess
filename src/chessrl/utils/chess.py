@@ -1,10 +1,25 @@
 """Defines chess related utility functions."""
 
-__all__ = ("get_uci_labels",)
+__all__ = (
+    "UCIMove",
+    "get_uci_labels",
+)
+
+import chessrl
+
+
+class UCIMove(str):
+    """Class representing a UCI move."""
+
+    def __new__(cls, move: str):
+        if move in chessrl.UCI_MOVES:
+            return str.__new__(cls, move)
+        else:
+            raise ValueError(f"Invalid UCI move: {move}")
 
 
 def get_uci_labels():
-    """Returns a list of possible moves encoded as UCI (including
+    """Returns a list of possible moves in UCI format (including
     promotions).
     Source:
         https://github.com/Zeta36/chess-alpha-zero/blob/

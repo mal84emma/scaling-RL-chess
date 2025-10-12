@@ -1,13 +1,6 @@
 """ToDo."""
 
-from __future__ import annotations
-
 __all__ = ("Agent",)
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from chessrl import Scorer
 
 import random
 
@@ -17,12 +10,11 @@ import numpy as np
 import chessrl
 import chessrl.game as game
 import chessrl.model as model
-from chessrl.scorer import StockfishScorer
+from chessrl.scorer import Scorer, StockfishScorer
+from chessrl.utils import UCIMove
 
-from .player import Player
 
-
-class Agent(Player):
+class Agent:
     """AI agent which will play thess.
 
     Parameters:
@@ -53,7 +45,7 @@ class Agent(Player):
         ):  # stockfish for perfect cp scores for testing
             self.model: Scorer = StockfishScorer(stockfish_binary)
 
-    def get_move(self, board: chess.Board) -> str:
+    def get_move(self, board: chess.Board) -> UCIMove:
         """Searches through all legal moves and returns the move which has
         the lowest predicted score for the opponent (UCI encoded).
 
@@ -62,7 +54,7 @@ class Agent(Player):
                 this agent is made.
 
         Returns:
-            str. UCI encoded movement.
+            UCIMove. UCI encoded movement.
         """
         move = chessrl.NULL_MOVE
         (legal_moves, next_states) = game.get_legal_moves(board, final_states=True)
@@ -76,7 +68,7 @@ class Agent(Player):
 
         # TODO: try using WDL scores with mate picker logic
 
-        return move
+        return UCIMove(move)
 
     def save(self, path):
         self.model.save_weights(path)

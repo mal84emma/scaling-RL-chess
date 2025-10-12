@@ -11,7 +11,9 @@ from .model import *
 from .players import *
 from .scorer import *
 from .utils import *
+from .utils import get_uci_labels
 
 STOCKFISH_DIR = "..."  # constants from package are useful
 
 NULL_MOVE = "00000"
+UCI_MOVES = get_uci_labels()
