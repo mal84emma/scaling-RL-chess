@@ -17,8 +17,8 @@ def _get_pieces_one_hot(
     color: chess.WHITE | chess.BLACK,
 ):
     """Returns a 3D-matrix representation of the pieces for one color.
-    The matrix ins constructed as follows:
-        8x8 (Chess board) x 6 possible pieces. = 384.
+    The matrix has dimensions:
+        8x8 (Chess board) x 6 possible pieces
 
     Parameters:
         board: Python-Chess Board. Board.
@@ -43,7 +43,7 @@ def _get_pieces_planes(board: chess.Board):
     Parameters:
         board: Python-Chess board
     Returns:
-        current: numpy array. 3D Matrix with dimensions 14x8x8.
+        current: numpy array. 3D Matrix with dimensions 8x8x12.
     """
     # TODO: castling rights, en passant, 50 move rule, player turn etc? this isn't the full game state
     # see chess programming wiki for ideas
@@ -142,14 +142,13 @@ def _get_game_history(board, T=8):
 
 
 def get_game_state(board: chess.Board):
-    """This method returns the matrix representation of a game with its
-    history of moves.
+    """This method returns the matrix representation of a chess position
+    (game state).
 
     Parameters:
         board: chess.Board. Board object representing current state.
     Returns:
-        game_state: numpy array. 3D Matrix with dimensions 8x8x[14(T+1)]. Where T
-        corresponds to the number of backward turns in time.
+        game_state: numpy array. 3D Matrix with dimensions 8x8x18.
     """
 
     pieces = _get_pieces_planes(board)

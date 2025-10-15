@@ -1,6 +1,6 @@
-"""This module contains the neural network model used by the agent to ..."""
+"""Neural network model used by the agent to estimate the position score."""
 
-__all__ = ("ChessModel",)
+__all__ = ("ChessScoreModel",)
 from keras import Model
 from keras import backend as K
 from keras.callbacks import (
@@ -18,21 +18,22 @@ from keras.layers import (
     Flatten,
     Input,
 )
-from keras.losses import categorical_crossentropy, mean_squared_error
+from keras.losses import mean_squared_error
 from keras.optimizers import Adam
+from keras.utils import Sequence
 
 
-def lr_scheduler(epoch, lr):
+def _lr_scheduler(epoch, lr):
     """Learning rate scheduler."""
     if epoch > 1:
         return lr * 0.9
     return lr
 
 
-class ChessModel:
-    """ToDo."""
+class ChessScoreModel:
+    """Neural Network model for scoring encoded chess positions."""
 
-    def __init__(self, compile_model=True, weights=None):
+    def __init__(self, compile_model: bool = True, weights: str = None):
         """Creates the model. This code builds a ResNet that will act as both
         the policy and value network (see AlphaZero paper for more info).
 
@@ -45,7 +46,7 @@ class ChessModel:
             model: Neural net model.
             __gra = TF Graph. You should not use this externally.
         """
-        inp = Input((8, 8, 127))
+        inp = Input((8, 8, 18))
 
         x = Conv2D(
             filters=256,
@@ -55,32 +56,18 @@ class ChessModel:
             kernel_regularizer="l2",
         )(inp)
 
-        for i in range(10):
+        for _ in range(10):
             x = self.__res_block(x)
 
-        # Policy Head - potentially unnecessary complications
-        # alternatively could tree search over value function with given depth
-        pol_head = Conv2D(
-            filters=2,
-            kernel_size=1,
-            padding="valid",
-            strides=1,
-            kernel_regularizer="l2",
-        )(x)
-        pol_head = BatchNormalization(axis=-1)(pol_head)
-        pol_head = Activation("relu")(pol_head)
-        pol_head = Flatten()(pol_head)
-        pol_head = Dense(
-            1968, kernel_regularizer="l2", activation="softmax", name="policy_out"
-        )(pol_head)
-
         # Value Head
+        # ==========
         # this can be trained on Stockfish evaluation of position
         # best to do for 'typical' games, either from Lichess or from
         # simulated games with easier engines
         # you don't need to learn all of chess, you just need to learn
         # the positions that you are likely to encounter (Lichess has these
-        # with their stockfish scores)
+        # with their stockfish scores, or we can generate them ourselves)
+
         val_head = Conv2D(
             filters=1,
             strides=1,
@@ -96,7 +83,10 @@ class ChessModel:
             1, kernel_regularizer="l2", activation="tanh", name="value_out"
         )(val_head)
 
-        self.model = Model(inp, [pol_head, val_head])
+        self.model: Model = Model(
+            inputs=inp,
+            outputs=val_head,
+        )
 
         self.weights_path = weights
         if weights:
@@ -105,25 +95,35 @@ class ChessModel:
         if compile_model:
             self.model.compile(
                 Adam(learning_rate=0.002),  # may need adjusting
-                loss=["categorical_crossentropy", "mean_squared_error"],
-                metrics={"policy_out": "accuracy"},
+                loss=["mean_squared_error"],
+                metrics=["accuracy", "mse"],
             )
 
     def predict(self, inp):
         return self.model.predict(inp, verbose=None)
 
-    def load_weights(self, weights_path):
+    def load_weights(self, weights_path: str):
         self.model.load_weights(weights_path)
         self.weights_path = weights_path
 
-    def save_weights(self, weights_path):
+    def save_weights(self, weights_path: str):
         self.model.save_weights(weights_path)
         self.weights_path = weights_path
 
     def train(self, game_state, game_outcome, next_action):
-        pass
+        # pass
+        raise NotImplementedError("Use train_generator instead.")
 
-    def train_generator(self, generator, epochs=1, logdir=None, val_gen=None):
+    def train_generator(
+        self,
+        generator: Sequence,
+        val_gen: Sequence = None,
+        epochs: int = 1,
+        logdir: str = None,
+    ):
+        """Train model using generator(s) of position-score data."""
+
+        # set up callbacks
         callbacks = []
         if logdir is not None:
             tensorboard_callback = TensorBoard(
@@ -134,9 +134,10 @@ class ChessModel:
         callbacks.append(
             EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)
         )
-        # callbacks.append(LearningRateScheduler(lr_scheduler, verbose=1))
+        # callbacks.append(LearningRateScheduler(_lr_scheduler, verbose=1))
         callbacks.append(BackupAndRestore(backup_dir="../../data/models/train_backup"))
 
+        # train model
         self.model.fit(
             generator,
             epochs=epochs,
@@ -149,12 +150,7 @@ class ChessModel:
         K.clear_session()
 
     def __loss(self, y_true, y_pred):
-        policy_pred, val_pred = y_pred[0], y_pred[1]
-        policy_true, val_true = y_true[0], y_true[1]
-
-        return mean_squared_error(val_true, val_pred) - categorical_crossentropy(
-            policy_true, policy_pred
-        )
+        return mean_squared_error(y_true, y_pred)
 
     def __res_block(self, block_input):
         """Builds a residual block"""
