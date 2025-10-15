@@ -23,7 +23,7 @@ def get_game_len(board: chess.Board) -> int:
     return len(board.move_stack)
 
 
-def get_legal_moves(board: chess.Board, final_states=False):
+def get_legal_moves(board: chess.Board, final_states=False) -> list:
     """Gets a list of legal moves in the current turn.
     Parameters:
         final_states: bool. Whether copies of the board after executing
@@ -45,7 +45,7 @@ def next_move(
     white_player: Player,
     black_player: Player,
     make_move=True,
-):
+) -> UCIMove:
     """Retrieves and makes the move of the player who's turn it is."""
     if board.turn == chess.WHITE:
         player_to_move = white_player
@@ -60,8 +60,8 @@ def next_move(
     return movement
 
 
-def move(board: chess.Board, movement: UCIMove):
-    """Make a specified move.
+def move(board: chess.Board, movement: UCIMove) -> None:
+    """Make a specified move (inplace).
 
     Params:
         board: chess.Board, Current board position.
@@ -77,32 +77,23 @@ def move(board: chess.Board, movement: UCIMove):
     return
 
 
-def get_history(board: chess.Board):
+def get_history(board: chess.Board) -> dict:
     moves = [x.uci() for x in board.move_stack]
     res = get_result(board)
     date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     return {"result": res, "moves": moves, "date": date}
 
 
-def get_board_fen(board: chess.Board):
-    return board.board_fen()
-
-
-def set_fen(board: chess.Board, fen: str):
-    board.set_board_fen(fen)
-    return
-
-
-def get_board_copy(board: chess.Board):
+def get_board_copy(board: chess.Board) -> chess.Board:
     return board.copy()
 
 
-def reset_board(board: chess.Board):
+def reset_board(board: chess.Board) -> None:
     board.reset()
     return
 
 
-def get_result(board: chess.Board):
+def get_result(board: chess.Board) -> int:
     """Returns the result of the game for the white pieces. None if the
     game is not over. This method checks if the game ends in a draw due
     to the fifty-move rule. Threefold is not checked because it can
@@ -128,7 +119,7 @@ def plot_board(
     show_moves=True,
     orientation=chess.WHITE,
     save_path=None,
-):
+) -> None:
     """Plots the current state of the board. This is useful for debug/log
     purposes while working outside a notebook
 

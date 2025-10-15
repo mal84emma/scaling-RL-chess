@@ -37,12 +37,12 @@ class Agent:
         )
 
         if weights_path is not None:
-            self.model: Scorer = model.ChessModel(
-                compile_model=True, weights=weights_path
+            self.model: Scorer = model.ChessScoreModel(
+                compile_model=True,
+                weights=weights_path,
             )
-        elif (
-            stockfish_binary is not None
-        ):  # stockfish for perfect cp scores for testing
+        elif stockfish_binary is not None:
+            # stockfish for perfect cp scores for testing
             self.model: Scorer = StockfishScorer(stockfish_binary)
 
     def get_move(self, board: chess.Board) -> UCIMove:
@@ -56,6 +56,8 @@ class Agent:
         Returns:
             UCIMove. UCI encoded movement.
         """
+        assert board.turn == self.color, "It is not this agent's turn to play."
+
         move = chessrl.NULL_MOVE
         (legal_moves, next_states) = game.get_legal_moves(board, final_states=True)
         move_scores = []

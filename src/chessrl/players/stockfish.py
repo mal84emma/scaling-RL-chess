@@ -8,14 +8,11 @@ import chess
 import chess.engine
 from chess.engine import Limit, SimpleEngine
 
+import chessrl.utils as utils
 from chessrl.utils import UCIMove
 
 # Remove anoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
-
-
-def _clamp(n, minn, maxn):
-    return max(min(maxn, n), minn)
 
 
 class Stockfish:
@@ -55,7 +52,9 @@ class Stockfish:
             move_index = move_variations.index(move)
             if random.random() <= 0.5:
                 increment = random.choice([-1, 1])
-                move_index = _clamp(move_index + increment, 0, len(move_variations) - 1)
+                move_index = utils.clamp(
+                    move_index + increment, 0, len(move_variations) - 1
+                )
                 move = move_variations[move_index]
 
         return UCIMove(move)
