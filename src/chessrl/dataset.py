@@ -1,6 +1,10 @@
-__all__ = ("GameDataset",)
+__all__ = (
+    "GameDataset",
+    "PositionDataset",
+)
 
 import json
+import random
 from typing import List
 
 import chess
@@ -8,43 +12,19 @@ import chess
 from chessrl import game
 
 
-class GameDataset(object):
-    """
-    This class holds several games and provides operations to
-    serialize/deserialize them as a JSON file. Also, it takes a game and
-    returns it as the expanded game.
+class GameDataset:
+    """Class for holding several games (chess.Board objects) which
+    provides operations to serialize/deserialize them as a JSON file.
     """
 
     def __init__(self, games: List[chess.Board] = None) -> None:
-        """Builds a dataset.
+        """Builds a games dataset.
         Parameters:
             games: List[chess.Board]. List of board objects containing games.
         """
         self.games = []
         if games is not None:
             self.games = games
-
-    # def augment_game(self, game_base):
-    #     # TODO: I think this is no longer needed given how we're ingesting training data now
-    #     """Expands a game. For the N movements of a game, it creates
-    #     N games with each state + the final result of the original game +
-    #     the next movement (in each state).
-    #     """
-    #     hist = game_base.get_history()
-    #     moves = hist["moves"]
-    #     result = hist["result"]
-    #     date = hist["date"]
-
-    #     augmented = []
-
-    #     g = Game(date=date)
-
-    #     for m in moves:
-    #         augmented.append({"game": g, "next_move": m, "result": result})
-    #         g = g.get_copy()
-    #         g.move(m)
-
-    #     return augmented
 
     def load(self, path: str):
         games_file = None
@@ -103,3 +83,95 @@ class GameDataset(object):
 
     def __getitem__(self, key):
         return self.games[key]
+
+
+class PositionDataset:
+    """Class for holding several positions (game-state - score pairs)
+    which provides operations to serialize/deserialize them as a JSON file.
+    """
+
+    def __init__(
+        self,
+        game_states: List[chess.Board] = None,
+        scores: List[int] = None,
+    ) -> None:
+        """Builds a positions dataset.
+        Parameters:
+            game_states: List[chess.Board]. List of board objects representing
+                game states.
+            scores: List[int]. List of centipawn scores for each game state.
+                Representing the 'goodness' of the position for the player
+                about to move.
+        """
+        self.game_states = []
+        self.game_scores = []
+        if (game_states is not None) and (scores is not None):
+            self.game_states = [b.copy(stack=False) for b in game_states]
+            self.game_scores = scores
+
+    def load(self, path: str):
+        """Load positions from JSON of (FEN, score) entries."""
+        positions_file = None
+        with open(path, "r") as f:
+            positions_file = f.read()
+        self.loads(positions_file)
+
+    def loads(self, string: str):
+        positions = json.loads(string)
+        for item in positions:
+            b = game.get_new_board()
+            b.set_fen(item[0])
+            s = item[1]
+            self.add_position(b, s)
+
+    def save(self, path: str):
+        """Save dataset of positions to JSON of (FEN, score) entries."""
+        all_data = PositionDataset()
+        try:
+            all_data.load(path)
+        except FileNotFoundError:
+            pass
+
+        all_data.append(self)
+
+        fens = [b.fen() for b in all_data.game_states]
+        scores = all_data.game_scores
+        positions = [(p, s) for p, s in zip(fens, scores)]
+
+        dstr = json.dumps(positions)
+        dstr = dstr.replace("],", "],\n")
+
+        with open(path, "w") as f:
+            f.write(dstr)
+
+    def add_position(self, board: chess.Board, score: int):
+        """Adds a (game-state, score) pair to the dataset."""
+        self.game_states.append(board.copy(stack=False))
+        self.game_scores.append(score)
+
+    def append(self, other):
+        """Appends a game (or another Dataset) to this one"""
+        if isinstance(other, PositionDataset):
+            self.game_states.extend(other.game_states)
+            self.game_scores.extend(other.game_scores)
+        else:
+            raise TypeError("Can only append another PositionDataset object.")
+
+    def shuffle(self):
+        """Shuffle the dataset in place."""
+        combined = list(zip(self.game_states, self.game_scores))
+        random.shuffle(combined)
+        self.game_states[:], self.game_scores[:] = zip(*combined)
+
+    def __str__(self):
+        fens = [b.board_fen() for b in self.game_states]
+        scores = self.game_scores
+        positions = [(p, s) for p, s in zip(fens, scores)]
+        return json.dumps(positions)
+
+    def __len__(self):
+        assert len(self.game_states) == len(self.game_scores)
+        return len(self.game_states)
+
+    def __getitem__(self, key):
+        return (self.game_states[key], self.game_scores[key])
