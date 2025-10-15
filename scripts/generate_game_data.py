@@ -1,6 +1,7 @@
 """Generate training games by playing two Stockfish models against each other."""
 
 import argparse
+import random
 from concurrent.futures import ThreadPoolExecutor
 
 import chess
@@ -8,23 +9,40 @@ from tqdm import tqdm
 
 import chessrl
 import chessrl.game as game
+import chessrl.utils as utils
 from chessrl import Agent, GameDataset, Stockfish
 from chessrl.utils import Logger
 
 
-def play_game(stockfish_binary, dataset, tqbar=None):
-    """ToDo."""
-    # TODO: add sampling of ELOs to make games different
+def play_game(
+    stockfish_binary: str,
+    dataset: GameDataset,
+    tqbar: tqdm = None,
+):
+    """Play a game between two Stockfish instances with randomised ELOs
+    and add to dataset."""
+
+    # randomly samples ELOs for intermediate to advanced players as suggested by
+    # https://www.chess.com/blog/bomb2030/what-is-considered-a-good-elo-score-for-recreational-players-is-1400-good
+    # use cross-correlation to make games competitive
+    white_elo = round(random.randint(1400, 2000), -1)
+    black_elo = white_elo + round(random.randint(-300, 300), -1)
+    black_elo = utils.clamp(black_elo, 1400, 2000)
+
     white_stockfish: chessrl.Player = Stockfish(
         chess.WHITE,
         stockfish_binary,
-        elo=3000,
+        elo=white_elo,
     )
-    # black_stockfish = Stockfish(chess.BLACK, stockfish_binary)
-    black_stockfish: chessrl.Player = Agent(
+    black_stockfish = Stockfish(
         chess.BLACK,
-        stockfish_binary=stockfish_binary,
+        stockfish_binary,
+        elo=black_elo,
     )
+    # black_stockfish: chessrl.Player = Agent(
+    #     chess.BLACK,
+    #     stockfish_binary=stockfish_binary,
+    # ) # for checking agent structure is working properly
 
     board = game.get_new_board()
 
@@ -40,18 +58,23 @@ def play_game(stockfish_binary, dataset, tqbar=None):
     if tqbar is not None:
         tqbar.update(1)
 
-    # Kill stockfish processes
+    # kill stockfish processes
     white_stockfish.close()
     black_stockfish.close()
 
 
-def gen_data(stockfish_binary, save_path, num_games=100, workers=2):
-    """ToDo."""
+def gen_data(
+    stockfish_binary: str,
+    save_path: str,
+    num_games: int = 100,
+    workers: int = 2,
+):
+    """Generate a dataset of games by playing Stockfish against itself using\
+    distributed workers."""
     logger = Logger.get_instance()
-    d = GameDataset()
     pbar = tqdm(total=num_games)
 
-    # TODO: add sampling of ELOs to make games different
+    d = GameDataset()
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         for _ in range(num_games):
@@ -62,8 +85,8 @@ def gen_data(stockfish_binary, save_path, num_games=100, workers=2):
                 tqbar=pbar,
             )
     # play_game(stockfish_binary=stockfish_binary, dataset=d, tqbar=pbar)
-
     pbar.close()
+
     logger.info("Saving dataset...")
     d.save(save_path)
 
@@ -71,19 +94,31 @@ def gen_data(stockfish_binary, save_path, num_games=100, workers=2):
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(
-        description="Plays some chess games,stores the result and trains a model."
+        description="Plays some chess games using Stockfish instances and stores the results as a dataset."
     )
     parser.add_argument(
-        "stockfish_binary", metavar="stockbin", help="Stockfish binary path"
+        "stockfish_binary",
+        metavar="stockfish binary",
+        help="Stockfish binary path",
     )
-    parser.add_argument("data_path", metavar="datadir", help="Path of .JSON dataset.")
-    parser.add_argument("--games", metavar="games", type=int, default=10)
+    parser.add_argument(
+        "data_path",
+        metavar="datadir",
+        help="Path of JSON dataset.",
+    )
+    parser.add_argument(
+        "--games",
+        metavar="games",
+        type=int,
+        default=10,
+        help="Number of games to play. Default 10.",
+    )
     parser.add_argument(
         "--workers",
         metavar="workers",
         type=int,
         default=2,
-        help="Number of workers for games.",
+        help="Number of workers for games. Default 2.",
     )
     parser.add_argument(
         "--debug",
