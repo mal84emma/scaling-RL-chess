@@ -9,3 +9,4 @@ from . import chess, logger
 from .chess import *
 from .math import *
 from .logger import *
+from .plotting import *

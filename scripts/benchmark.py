@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 from chessrl import Agent, Logger, MPAgent, Stockfish, StockfishScorer, game
 from chessrl.model import get_model_path
+from chessrl.utils import init_board_image, update_board_image
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -21,6 +22,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 def play_game(
     model_path: str,
     stockfish_binary: str,
+    use_opening_book: bool = True,
     stockfish_elo: int = 1320,
     log: bool = False,
     use_ttmp: bool = False,
@@ -38,6 +40,9 @@ def play_game(
     logger = Logger.get_instance()
 
     board = game.get_new_board()
+
+    if use_opening_book:
+        game.set_opening_position(board, book="resources/opening_book.json")
 
     agent_color = chess.WHITE if random.random() <= 0.5 else chess.BLACK
     stockfish_color = chess.BLACK if agent_color is chess.WHITE else chess.WHITE
@@ -62,44 +67,18 @@ def play_game(
 
     if plot:
         scorer = StockfishScorer(binary_path=stockfish_binary)
-
-        fig, ax = plt.subplots(1, 1)
-        img = game.plot_board(
-            board,
-            return_img=True,
-            show_moves=False,
-            orientation=agent_color,
-        )
-        im = ax.imshow(img)
-        ax.axis("off")
-        ax.set_title(f"({agent_color_name}) ...")
-        plt.tight_layout()
-        plt.pause(delay)
+        im, ax, fig = init_board_image(board, agent_color, delay)
 
     try:
         timer_start = timer()
 
         # play out game
         while game.get_result(board) is None:
-            if plot and (board.turn is agent_color):  # draw board
-                im.set_data(
-                    game.plot_board(
-                        board, return_img=True, show_moves=True, orientation=agent_color
-                    )
-                )
-                scores = scorer.score_position(board, cp_only=False)
-                ax.set_title(
-                    f"({agent_color_name}) CP: {scores['cp']}, rate: {scores['rate'] * 100:.1f}%"
-                )
-                fig.canvas.draw_idle()
-                plt.pause(delay)
-
             # make move
-            game.next_move(
-                board,
-                white_player,
-                black_player,
-            )
+            game.next_move(board, white_player, black_player)
+
+            if plot and (board.turn is agent_color):  # draw board
+                update_board_image(board, agent_color, im, ax, fig, scorer, delay)
 
         timer_end = timer()
 
@@ -127,6 +106,7 @@ def benchmark(
     model_dir: str,
     stockfish_binary: str,
     games: int = 10,
+    use_opening_book: bool = True,
     stockfish_elo: int = 1320,
     log: bool = False,
     plot: bool = False,
@@ -150,6 +130,7 @@ def benchmark(
         play_game(
             model_path,
             stockfish_binary,
+            use_opening_book=use_opening_book,
             stockfish_elo=stockfish_elo,
             log=log,
             use_ttmp=use_ttmp,
@@ -165,7 +146,6 @@ def benchmark(
     color_ints = [1 if x["color"] == chess.WHITE else -1 for x in results]
     winners = [x["result"] for x in results]  # 0 for draw
     won = [a * b for a, b in zip(color_ints, winners)]
-    print(color_ints, winners, won)
 
     wins = len([x for x in won if x == 1])
     draws = len([x for x in results if x["result"] == 0])
@@ -210,7 +190,7 @@ if __name__ == "__main__":
         plot=args.plot,
         delay=args.delay,
         use_ttmp=False,
-        games=2,
+        games=10,
         stockfish_elo=1320,
     )
     # see page 77 of https://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf

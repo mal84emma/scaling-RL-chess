@@ -15,7 +15,7 @@ def main(n_positions: int = 10):
     model = ChessScoreModel()
     model.load_weights(model_path)
 
-    for i in range():
+    for i in range(n_positions):
         state, score = data_train[i]
         x = get_game_state(state)
         pred = model.predict(np.expand_dims(x, axis=0))

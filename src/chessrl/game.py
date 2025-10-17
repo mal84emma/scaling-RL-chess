@@ -1,5 +1,7 @@
 """Functions to play a chess game."""
 
+import json
+import random
 from datetime import datetime
 from io import BytesIO
 
@@ -90,6 +92,18 @@ def get_board_copy(board: chess.Board) -> chess.Board:
 
 def reset_board(board: chess.Board) -> None:
     board.reset()
+    return
+
+
+def set_opening_position(board: chess.Board, book: str) -> None:
+    """Sets the board to a random opening position from the given opening book."""
+    with open(book, "r") as f:
+        openings = json.load(f)
+    openings = [x for x in openings if ("moves" in x.keys()) and (len(x["moves"]) > 0)]
+
+    opening = random.choice(openings)
+    for movement in opening["moves"]:
+        move(board, UCIMove(movement))
     return
 
 
