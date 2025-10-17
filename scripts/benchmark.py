@@ -1,139 +1,121 @@
-"""This script serves as a way to get tangible metrics about how well a
-trained agent behaves agaisnt Stockfish. For that, several games are played
-and a summary of them is returned.
+"""Benchmark a trained agent by playing agaisnt Stockfish.
+Plays several games and reports a summary of the results.
 """
 
 import argparse
-import multiprocessing
 import os
 import random
 import traceback
-from concurrent.futures import ProcessPoolExecutor
 from timeit import default_timer as timer
 
+import chess
 import matplotlib.pyplot as plt
-from agent import Agent
-from game import Game
-from gamestockfish import GameStockfish
-from lib.logger import Logger
-from lib.model import get_model_path
-from scorerstockfish import ScorerStockfish
 from tqdm import tqdm
-from ttmpt import TTAgent
+
+from chessrl import Agent, Logger, MPAgent, Stockfish, StockfishScorer, game
+from chessrl.model import get_model_path
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 
-def process_initializer():
-    """Initializer of the training threads in in order to detect if there
-    is a GPU available and use it. This is needed to initialize TF inside the
-    child process memory space."""
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-    import tensorflow as tf
-
-    physical_devices = tf.config.experimental.list_physical_devices("GPU")
-    if len(physical_devices) > 0:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-        tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    tf.keras.backend.clear_session()
-
-
-def play_game_job(
-    id: int,
-    model_path,
-    stockfish_depth=10,
-    stockfish_elo=1320,
-    log=False,
-    use_ttmp=False,
-    plot=False,
-    delay=0.5,
+def play_game(
+    model_path: str,
+    stockfish_binary: str,
+    stockfish_elo: int = 1320,
+    log: bool = False,
+    use_ttmp: bool = False,
+    plot: bool = False,
+    delay: float = 0.5,
 ):
     """Plays a game and returns the result..
 
     Parameters:
-        id: Play ID (i.e. worker ID).
-        model_path: path to the .weights.h5 model. If it not exists, it will play with
-        a fresh one.
-        stockfish_depth: int. Difficulty of stockfish.
+        model_path: path to the .weights.h5 model for agent to use.
+        stockfish_binary: str. Path to stockfish binary.
+        stockfish_elo: int. Stockfish difficulty.
     """
 
     logger = Logger.get_instance()
 
-    agent_is_white = Game.WHITE if random.random() <= 0.5 else Game.BLACK
+    board = game.get_new_board()
 
-    game_env = GameStockfish(
-        player_color=agent_is_white,
-        stockfish="../../res/stockfish-17-macos-m1-apple-silicon",
-        stockfish_depth=stockfish_depth,
-        stockfish_elo=stockfish_elo,
-    )
+    agent_color = chess.WHITE if random.random() <= 0.5 else chess.BLACK
+    stockfish_color = chess.BLACK if agent_color is chess.WHITE else chess.WHITE
 
-    try:
-        agent_type = Agent if not use_ttmp else TTAgent
-        # chess_agent = agent_type(color=agent_is_white, weights_path=model_path)
-        from stockfish import Stockfish
+    stockfish = Stockfish(stockfish_color, stockfish_binary, elo=stockfish_elo)
 
-        chess_agent = Stockfish(
-            color=agent_is_white,
-            binary_path="../../res/stockfish-17-macos-m1-apple-silicon",
-            elo=2500,
-        )
-    except OSError:
-        logger.error("Model not found. Exiting.")
-        return None
+    # set up agent
+    agent_type = MPAgent if use_ttmp else Agent
+    chess_agent = agent_type(color=agent_color, weights_path=model_path)
+    # chess_agent = Stockfish(agent_color, stockfish_binary, elo=2500)
+
+    if agent_color is chess.WHITE:
+        white_player = chess_agent
+        black_player = stockfish
+    else:
+        white_player = stockfish
+        black_player = chess_agent
 
     if log:
-        agent_color = "White" if agent_is_white else "Black"
-        logger.info(f"Starting game {id}: Agent is {agent_color}")
+        agent_color_name = chess.COLOR_NAMES[agent_color]
+        logger.info(f"Starting game: Agent is {agent_color_name}")
 
     if plot:
-        scorer = ScorerStockfish(
-            binary_path="../../res/stockfish-17-macos-m1-apple-silicon"
-        )
+        scorer = StockfishScorer(binary_path=stockfish_binary)
 
         fig, ax = plt.subplots(1, 1)
-        img = game_env.plot_board(return_img=True, show_moves=False)
+        img = game.plot_board(
+            board,
+            return_img=True,
+            show_moves=False,
+            orientation=agent_color,
+        )
         im = ax.imshow(img)
         ax.axis("off")
-        ax.set_title(f"({agent_color}) ...")
+        ax.set_title(f"({agent_color_name}) ...")
         plt.tight_layout()
         plt.pause(delay)
 
     try:
         timer_start = timer()
 
-        if not agent_is_white:
-            game_env.move(Game.NULL_MOVE)  # make stockfish take first move
-
-        while game_env.get_result() is None:
-            if plot:  # draw board
-                im.set_data(game_env.plot_board(return_img=True, show_moves=True))
-                scores = scorer.score_position(game_env)
+        # play out game
+        while game.get_result(board) is None:
+            if plot and (board.turn is agent_color):  # draw board
+                im.set_data(
+                    game.plot_board(
+                        board, return_img=True, show_moves=True, orientation=agent_color
+                    )
+                )
+                scores = scorer.score_position(board, cp_only=False)
                 ax.set_title(
-                    f"({agent_color}) CP: {scores['cp']}, rate: {scores['rate'] * 100:.1f}%"
+                    f"({agent_color_name}) CP: {scores['cp']}, rate: {scores['rate'] * 100:.1f}%"
                 )
                 fig.canvas.draw_idle()
                 plt.pause(delay)
 
-            # make moves
-            agent_move = chess_agent.get_move(game_env)  # , real_game=True
-            game_env.move(agent_move)
+            # make move
+            game.next_move(
+                board,
+                white_player,
+                black_player,
+            )
 
         timer_end = timer()
 
         if log:
             logger.info(
-                f"Game {id} done. Result: {game_env.get_result()}. "
+                f"Game done. Result: {game.get_result(board)}. "
                 f"took {round(timer_end - timer_start, 2)} secs"
             )
     except Exception:
         logger.error(traceback.format_exc())
 
-    res = {"color": agent_is_white, "result": game_env.get_result()}
+    res = {"color": agent_color, "result": game.get_result(board)}
 
     # close out engine instances
-    game_env.close()
     chess_agent.close()
+    stockfish.close()
     if plot:
         scorer.close()
         plt.close(fig)
@@ -142,76 +124,63 @@ def play_game_job(
 
 
 def benchmark(
-    model_dir,
-    workers=1,
-    games=10,
-    stockfish_elo=1320,
-    log=False,
-    plot=False,
-    delay=0.5,
-    distributed=False,
-    use_ttmp=False,
+    model_dir: str,
+    stockfish_binary: str,
+    games: int = 10,
+    stockfish_elo: int = 1320,
+    log: bool = False,
+    plot: bool = False,
+    delay: float = 0.5,
+    use_ttmp: bool = False,
 ):
     """Plays N games and gets stats about the results.
 
     Parameters:
         model_dir: str. Directory where the neural net weights and training
             logs will be saved.
-        workers: number of concurrent games (workers which will play the games)
+        stockfish_binary: str. Path to stockfish binary.
     """
-    multiprocessing.set_start_method("spawn", force=True)
 
     if log:
         logger = Logger.get_instance()
-        if distributed:
-            logger.info(f"Setting up {workers} concurrent games.")
 
     model_path = get_model_path(model_dir)
 
-    if distributed:
-        with ProcessPoolExecutor(workers, initializer=process_initializer) as executor:
-            results = []
-            for i in range(games):
-                results.append(executor.submit(play_game_job, *[i, model_path]))
-        results = [r.result() for r in results]
-
-    else:
-        results = [
-            play_game_job(
-                i,
-                model_path,
-                stockfish_elo=stockfish_elo,
-                log=log,
-                use_ttmp=use_ttmp,
-                plot=plot,
-                delay=delay,
-            )
-            for i in tqdm(range(games), desc="Games played")
-        ]
+    results = [
+        play_game(
+            model_path,
+            stockfish_binary,
+            stockfish_elo=stockfish_elo,
+            log=log,
+            use_ttmp=use_ttmp,
+            plot=plot,
+            delay=delay,
+        )
+        for _ in tqdm(range(games), desc="Games played")
+    ]
 
     if log:
         logger.debug("Calculating stats.")
-    won = [
-        1
-        if x["color"] is Game.WHITE
-        and x["result"] == 1
-        or x["color"] is Game.BLACK
-        and x["result"] == -1
-        else 0  # noqa:W503
-        for x in results
-    ]
+
+    color_ints = [1 if x["color"] == chess.WHITE else -1 for x in results]
+    winners = [x["result"] for x in results]  # 0 for draw
+    won = [a * b for a, b in zip(color_ints, winners)]
+    print(color_ints, winners, won)
+
+    wins = len([x for x in won if x == 1])
+    draws = len([x for x in results if x["result"] == 0])
 
     if log:
         print("##################### SUMMARY ###################")
         print(f"Games played: {games}")
-        print(f"Games won: {len([x for x in won if x == 1])}")
-        print(f"Games drawn: {len([x for x in results if x['result'] == 0])}")
+        print(f"Games won: {wins}")
+        print(f"Games drawn: {draws}")
         print("#################################################")
 
     return dict(
         played=games,
-        won=len([x for x in won if x == 1]),
-        drawn=len([x for x in results if x["result"] == 0]),
+        won=wins,
+        drawn=draws,
     )
 
 
@@ -221,8 +190,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "model_dir",
-        metavar="modeldir",
-        help="where to store (and load from)the trained model and the logs",
+        metavar="model dir",
+        help="Directory containing model weights file.",
+    )
+    parser.add_argument(
+        "stockfish_binary",
+        metavar="stockfish binary",
+        help="Stockfish binary path.",
     )
     parser.add_argument("--plot", action="store_true", default=False)
     parser.add_argument("--delay", metavar="delay", type=float, default=0.5)
@@ -231,13 +205,12 @@ if __name__ == "__main__":
 
     benchmark(
         args.model_dir,
-        workers=2,
+        args.stockfish_binary,
         log=True,
         plot=args.plot,
         delay=args.delay,
-        distributed=False,
         use_ttmp=False,
-        games=10,
+        games=2,
         stockfish_elo=1320,
     )
     # see page 77 of https://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf

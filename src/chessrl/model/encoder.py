@@ -65,15 +65,15 @@ def _get_en_passant_plane(board: chess.Board):
     Parameters:
         board: Python-Chess board
     Returns:
-        en_passant: numpy array. 8x8 matrix with 1 in the en passant square
+        en_passant: numpy array. 8x8x1 matrix with 1 in the en passant square
                     and 0 elsewhere. If no en passant is available, returns
                     a matrix of 0's.
     """
-    en_passant = np.zeros((8, 8))
+    en_passant = np.zeros((8, 8, 1))
     if board.ep_square is not None:
         row = chess.square_rank(board.ep_square)
         col = chess.square_file(board.ep_square)
-        en_passant[row, col] = 1
+        en_passant[row, col, 0] = 1
     return en_passant
 
 

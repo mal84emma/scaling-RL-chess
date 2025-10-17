@@ -33,7 +33,11 @@ def convert_games_to_positions(
     n_positions_per_game = np.ones(ngames, dtype=int) * div
     n_positions_per_game[:rem] += 1
 
-    for j, g in tqdm(enumerate(games.games), desc="Getting positions from games..."):
+    for j, g in tqdm(
+        enumerate(games.games),
+        total=ngames,
+        desc="Getting positions from games...",
+    ):
         tmp_board = chess.Board()
 
         posn_indices = random.sample(
