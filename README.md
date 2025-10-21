@@ -25,7 +25,7 @@ If you want to reuse this code on your project, and have any doubt [here](https:
 ## Open issues
 
 - Implement the test-time MPC fine-tuning strategy (use new class and overload `predict` method) - aim for 2-3 mins per move to mimic 90min format classical chess
-- Think about how this strategy differs from the MCTS used by AlphaZero (it's kind of exploring the future in a similar way, i.e. on-policy-ish, but maybe having access to an opponent engine is the difference c.f. the need to self-play)
+- Think about how this strategy differs from the MCTS used by AlphaZero (it's kind of exploring the future in a similar way, i.e. on-policy-ish, but maybe having access to an opponent engine is the difference c.f. the need to self-play) - c.f. explanation in https://nikcheerla.github.io/deeplearningschool/2018/01/01/AlphaZero-Explained/
 
 ### Closing engine connections
 
