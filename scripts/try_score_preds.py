@@ -11,7 +11,7 @@ def main(n_positions: int = 10):
     data_train = PositionDataset()
     data_train.load("data/positions/positions.json")
 
-    model_path = get_model_path("data/models/modela")
+    model_path = get_model_path("data/models/modelt")
     model = ChessScoreModel()
     model.load_weights(model_path)
 

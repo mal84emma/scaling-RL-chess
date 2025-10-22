@@ -30,7 +30,7 @@ def train(
     model_path = get_model_path(model_dir)
 
     logger.info("Loading the model...")
-    model = ChessScoreModel()
+    model = ChessScoreModel(model_architecture="transformer")
 
     try:
         model.load_weights(model_path)
