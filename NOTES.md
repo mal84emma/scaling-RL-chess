@@ -11,3 +11,6 @@ Centipawn scores have their issues, mate is numerically very spikey (the score a
 
 - Neural Network training is a complete dark art. Loads of factors affect performance in murky and interdependent ways; the learning rate (and schedule), the batch size, the architecture (e.g. no. of hidden layers, no. of filters, no. of residual layers), and so on. How do you even start to tune these things? I have no idea. [Some people](https://github.com/dogeystamp/chess_inator) claim to get very impressive results from very small networks, whereas AlphaZero used a huge network and tonnes of compute.
 - The recommended settings turn out to be really quite good for the task and difficult to improve on (shock, turns out DeepMind are smart).
+- Bigger is not always better. Often when I used a larger network it got stuck during training at a local minimum with a significantly higher loss. Training very large models is difficult, and can lead to their extra power being wasted. Interestingly the loss at which the models got stuck was pretty consistent across different hyper-parameter choices.
+
+- Current model, `Tmodel`, trained using command ```python scripts/train_model.py data/models/Tmodel data/positions/positions.json --epochs 50 --bs 256 --vs 0.1 ```

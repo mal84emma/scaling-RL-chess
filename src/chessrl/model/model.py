@@ -4,16 +4,9 @@ __all__ = ("ChessScoreModel",)
 
 import chess
 import numpy as np
-from keras import Model, layers, ops
+from keras import Model, callbacks, layers, ops
 from keras import backend as K
-from keras.callbacks import (
-    BackupAndRestore,
-    EarlyStopping,
-    LearningRateScheduler,
-    ReduceLROnPlateau,
-    TensorBoard,
-)
-from keras.losses import mean_squared_error
+from keras.losses import mean_absolute_error, mean_squared_error
 from keras.optimizers import Adam
 from keras.utils import Sequence
 
@@ -73,7 +66,7 @@ class ChessScoreModel:
                     learning_rate=1e-3,  # Standard is 1e-3 - previously 1e-5 has been good
                     # weight_decay=1e-4,  # Add weight decay for generalization
                 ),
-                loss=["mean_squared_error"],
+                loss=["mean_absolute_error"],  # "mean_squared_error"
                 metrics=["accuracy", "mse", "mae"],  # Added MAE for better monitoring
             )
 
@@ -107,23 +100,23 @@ class ChessScoreModel:
         """Train model using generator(s) of position-score data."""
 
         # set up callbacks
-        callbacks = []
+        cbacks = []
         if logdir is not None:
-            tensorboard_callback = TensorBoard(
+            tensorboard_callback = callbacks.TensorBoard(
                 log_dir=logdir, histogram_freq=0, write_graph=False, update_freq=1
             )
-            callbacks.append(tensorboard_callback)
+            cbacks.append(tensorboard_callback)
 
-        callbacks.append(
-            EarlyStopping(
+        cbacks.append(
+            callbacks.EarlyStopping(
                 monitor="val_loss",
                 patience=10,
                 restore_best_weights=True,
-                min_delta=100,  # Only stop if improvement is meaningful
+                min_delta=1,  # Only continue if improvement is meaningful
                 mode="min",
             )
         )
-        # callbacks.append(
+        # cbacks.append(
         #     ReduceLROnPlateau(
         #         monitor="val_loss",
         #         factor=0.5,  # Reduce LR by half when plateau
@@ -132,10 +125,10 @@ class ChessScoreModel:
         #         verbose=1,
         #     )
         # )
-        callbacks.append(
-            LearningRateScheduler(_lr_scheduler, verbose=1)
+        cbacks.append(
+            callbacks.LearningRateScheduler(_lr_scheduler, verbose=1)
         )  # gradually reducing lr seems to improve training
-        callbacks.append(BackupAndRestore(backup_dir="data/models/train_backup"))
+        cbacks.append(callbacks.BackupAndRestore(backup_dir="data/models/train_backup"))
 
         # train model
         self.model.fit(
@@ -143,14 +136,15 @@ class ChessScoreModel:
             epochs=epochs,
             validation_data=val_gen,
             verbose=1,
-            callbacks=callbacks,
+            callbacks=cbacks,
         )
 
     def __del__(self):
         K.clear_session()
 
     def __loss(self, y_true, y_pred):
-        return mean_squared_error(y_true, y_pred)
+        # return mean_squared_error(y_true, y_pred)
+        return mean_absolute_error(y_true, y_pred)
 
     def _build_cnn(self, inp):
         """Builds CNN model architecture.
