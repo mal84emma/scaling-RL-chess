@@ -7,7 +7,7 @@ import numpy as np
 from keras import Model, callbacks, layers, ops
 from keras import backend as K
 from keras.losses import mean_absolute_error, mean_squared_error
-from keras.optimizers import Adam
+from keras.optimizers import Adam, Nadam
 from keras.utils import Sequence
 
 from .encoder import get_game_state
@@ -62,7 +62,7 @@ class ChessScoreModel:
 
         if compile_model:
             self.model.compile(
-                Adam(
+                Nadam(
                     learning_rate=1e-3,  # Standard is 1e-3 - previously 1e-5 has been good
                     # weight_decay=1e-4,  # Add weight decay for generalization
                 ),
