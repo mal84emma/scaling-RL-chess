@@ -54,8 +54,9 @@ def update_board_image(
         )
     )
     scores = scorer.score_position(board, cp_only=False)
-    ax.set_title(
-        f"({agent_color_name}) CP: {scores['cp']}, rate: {scores['rate'] * 100:.1f}%"
-    )
+    if board.turn == agent_color:
+        ax.set_title(
+            f"({agent_color_name}) CP: {scores['cp']}, rate: {scores['rate'] * 100:.1f}%"
+        )
     fig.canvas.draw_idle()
     plt.pause(delay)

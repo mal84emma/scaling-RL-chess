@@ -13,4 +13,5 @@ Centipawn scores have their issues, mate is numerically very spikey (the score a
 - The recommended settings turn out to be really quite good for the task and difficult to improve on (shock, turns out DeepMind are smart).
 - Bigger is not always better. Often when I used a larger network it got stuck during training at a local minimum with a significantly higher loss. Training very large models is difficult, and can lead to their extra power being wasted. Interestingly the loss at which the models got stuck was pretty consistent across different hyper-parameter choices.
 
-- Current model, `Tmodel`, trained using command ```python scripts/train_model.py data/models/Tmodel data/positions/positions.json --epochs 50 --bs 256 --vs 0.1 ```
+- Current model, `Tmodel`, trained using command ```python scripts/train_model.py data/models/Tmodel data/positions/positions.json --epochs 50 --bs 256 --vs 0.1 ``` - ran a 2nd time to improve training a bit.
+- The current model can occasionally get itself into good positions, but it frequently blunders them and doesn't seem to have learned checkmate. In fairness, it's not a big model and hasn't been trained on much data. It doesn't seem to have picked up a few basic tactics, e.g. progressing pawns to promotion.

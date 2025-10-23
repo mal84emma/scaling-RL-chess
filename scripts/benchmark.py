@@ -68,6 +68,7 @@ def play_game(
     if plot:
         scorer = StockfishScorer(binary_path=stockfish_binary)
         im, ax, fig = init_board_image(board, agent_color, delay)
+        update_board_image(board, agent_color, im, ax, fig, scorer, delay)
 
     try:
         timer_start = timer()
@@ -77,7 +78,7 @@ def play_game(
             # make move
             game.next_move(board, white_player, black_player)
 
-            if plot and (board.turn is agent_color):  # draw board
+            if plot:
                 update_board_image(board, agent_color, im, ax, fig, scorer, delay)
 
         timer_end = timer()
