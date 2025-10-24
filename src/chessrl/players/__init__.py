@@ -2,7 +2,7 @@ __all__ = (
     "Agent",
     "Stockfish",
     "Player",
-    "ttmpt",
+    "MPAgent",
 )
 
 from . import agent, player, stockfish, ttmpt

@@ -50,8 +50,19 @@ def play_game(
     stockfish = Stockfish(stockfish_color, stockfish_binary, elo=stockfish_elo)
 
     # set up agent
-    agent_type = MPAgent if use_ttmp else Agent
-    chess_agent = agent_type(color=agent_color, weights_path=model_path)
+    if use_ttmp:
+        chess_agent = MPAgent(
+            color=agent_color,
+            weights_path=model_path,
+            stockfish_binary=stockfish_binary,
+            stockfish_elo=stockfish_elo,
+        )
+        logger.info("Using TTMP agent.")
+    else:
+        chess_agent = Agent(
+            color=agent_color,
+            weights_path=model_path,
+        )
     # chess_agent = Stockfish(agent_color, stockfish_binary, elo=2500)
 
     if agent_color is chess.WHITE:
@@ -190,7 +201,7 @@ if __name__ == "__main__":
         log=True,
         plot=args.plot,
         delay=args.delay,
-        use_ttmp=False,
+        use_ttmp=True,
         games=10,
         stockfish_elo=1320,
     )

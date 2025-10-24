@@ -142,9 +142,9 @@ class ChessScoreModel:
     def __del__(self):
         K.clear_session()
 
-    def __loss(self, y_true, y_pred):
-        # return mean_squared_error(y_true, y_pred)
-        return mean_absolute_error(y_true, y_pred)
+    # def __loss(self, y_true, y_pred):
+    #     # return mean_squared_error(y_true, y_pred)
+    #     return mean_absolute_error(y_true, y_pred)
 
     def _build_cnn(self, inp):
         """Builds CNN model architecture.
