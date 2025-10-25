@@ -1,4 +1,4 @@
-# Important project notes
+# Unstructured project notes
 
 - I've completely restructured the original repo because it had some odd features
 - Some stochasticity needed to be added to Stockfish to avoid all of the simulated training games being the same. Currently it probabilistically choose a move 1 position better or worse that chosen by its elo rating.
