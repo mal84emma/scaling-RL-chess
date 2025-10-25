@@ -31,7 +31,7 @@ class MPAgent(Agent):
         weights_path: str,
         stockfish_binary: str,
         stockfish_elo: int = 1320,
-        n_explore: int = 8,
+        n_explore: int = 10,
         ttt_iters: int = 1,
     ):
         super().__init__(color, weights_path)
@@ -52,6 +52,7 @@ class MPAgent(Agent):
         move = tmp_agent.get_move(board)
 
         timer_end = timer()
+        del tmp_agent.model
         del tmp_agent
 
         logger.info(
@@ -79,6 +80,13 @@ class MPAgent(Agent):
             sf_color,
             self.stockfish_binary,
             self.stockfish_elo,
+        )
+
+        stockfish_benchmark = Stockfish(
+            self.color,
+            self.stockfish_binary,
+            elo=3100,  # god tier elo
+            stochastic=False,
         )
         scorer = StockfishScorer(self.stockfish_binary)
 
@@ -112,6 +120,11 @@ class MPAgent(Agent):
 
             move_hat = n_best_moves[np.argmin(next_positions.game_scores)]
             logger.info(f"Estimated best move: {move_hat}")
+            benchmark_move = stockfish_benchmark.get_move(board)
+            # oddly this doesn't always seem to be the best move as suggested by the scorer
+            logger.info(f"Benchmark move: {benchmark_move}")
+            print("Moves: ", n_best_moves)
+            print("Scores:", next_positions.game_scores)
 
             for _ in range(6):  # copy 2^6 times
                 next_positions.append(next_positions)
@@ -127,10 +140,16 @@ class MPAgent(Agent):
                 logdir="data/models/tmp",
             )
 
+            del next_positions
             os.remove("data/positions/tmp_positions.json")
             ## end tuning iteration
 
+        # cleanup
+        # TODO: fix memory leak
         shutil.rmtree("data/models/tmp")
+        stockfish_agent.close()
+        stockfish_benchmark.close()
+        scorer.close()
 
         return tmp_agent
 

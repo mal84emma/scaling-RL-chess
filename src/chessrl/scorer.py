@@ -7,6 +7,8 @@ from chess.engine import Limit, SimpleEngine
 # Remove annoying warnings of the engine.
 chess.engine.LOGGER.setLevel(logging.ERROR)
 
+import chessrl
+
 
 class Scorer(Protocol):
     def score_position(self, board: chess.Board) -> int | dict:
@@ -66,7 +68,7 @@ class StockfishScorer:
         """
 
         scores = self.engine.analyse(board, self.limit)["score"]
-        cp_score = scores.pov(board.turn).score(mate_score=1500)
+        cp_score = scores.pov(board.turn).score(mate_score=chessrl.MATE_CP_SCORE)
         score_rate = scores.wdl().pov(board.turn).expectation()
 
         if cp_only:

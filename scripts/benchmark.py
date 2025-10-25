@@ -190,6 +190,9 @@ if __name__ == "__main__":
         metavar="stockfish binary",
         help="Stockfish binary path.",
     )
+    parser.add_argument("--elo", metavar="elo", type=int, default=1320)
+    parser.add_argument("--games", metavar="games", type=int, default=10)
+    parser.add_argument("--use_ttmp", action="store_true", default=False)
     parser.add_argument("--plot", action="store_true", default=False)
     parser.add_argument("--delay", metavar="delay", type=float, default=0.5)
 
@@ -199,11 +202,11 @@ if __name__ == "__main__":
         args.model_dir,
         args.stockfish_binary,
         log=True,
+        games=args.games,
+        stockfish_elo=args.elo,
         plot=args.plot,
         delay=args.delay,
-        use_ttmp=True,
-        games=10,
-        stockfish_elo=1320,
+        use_ttmp=args.use_ttmp,
     )
     # see page 77 of https://web.ist.utl.pt/diogo.ferreira/papers/ferreira13impact.pdf
     # for comparison between stockfish depth and Elo rating

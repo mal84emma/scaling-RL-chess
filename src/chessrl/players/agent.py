@@ -40,7 +40,6 @@ class Agent:
             self.model: Scorer = model.ChessScoreModel(
                 compile_model=True,
                 weights=weights_path,
-                model_architecture="transformer",
             )
         elif stockfish_binary is not None:
             # stockfish for perfect cp scores for testing

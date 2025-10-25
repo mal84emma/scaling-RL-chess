@@ -15,3 +15,4 @@ from .utils import get_uci_labels
 
 NULL_MOVE = "00000"
 UCI_MOVES = get_uci_labels()
+MATE_CP_SCORE = 1500
