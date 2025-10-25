@@ -15,3 +15,13 @@ Centipawn scores have their issues, mate is numerically very spikey (the score a
 
 - Current model, `Tmodel`, trained using command ```python scripts/train_model.py data/models/Tmodel data/positions/positions.json --epochs 50 --bs 256 --vs 0.1 ``` - ran a 2nd time to improve training a bit.
 - The current model can occasionally get itself into good positions, but it frequently blunders them and doesn't seem to have learned checkmate. In fairness, it's not a big model and hasn't been trained on much data. It doesn't seem to have picked up a few basic tactics, e.g. progressing pawns to promotion.
+- The transformer models have validation losses below the train set loss during training, which is interestingly good generalisation performance. For the CNN models, validation losses can be much higher than train.
+- Actually, the CNN model (`Cmodel`) seems to be doing a bit better, and was trained with command ```python scripts/train_model.py data/models/CNN_model data/positions/positions.json --epochs 25 --bs 500 --vs 0.1```
+- `Cmodel2` (trained without l2 regularization) has a reasonably higher training loss but achieves lower validation loss than `Cmodel`. It appears to be able to play very well initially (often getting to 100% WDL), but then blunders its strong position.
+- The transformer models seemed to have much more difficulty taking up the position information at test-time (maybe because they're trying to find patterns that are too general? - speculative).
+- Something really odd is happening when `Cmodel2` is updated a test-time - the loss just goes through the roof and stays there. Not sure what's happening here. But, when the `Cmodel` weights are loaded in without regularization, the test-time updates seem to work better than before (and over-fitting is fine as we don't care about generalisation as the model is then binned).
+- Need to think about this. Maybe I need two sets of model settings for train time and test time.
+
+Discussion:
+- Intuition here comes from observations from Transfer Learning research, where fine tuning a general model provides better performance for a specific task. Unfortunately here the pre-trained model is pretty bad, so combining its (broadly unhelpful) knowledge with the observations is limited.
+- The physical analogy to this scheme is you having a grand master sitting next to you who you can explain your plan for the next few turns to, and for each rollout they'll give you feedback on how good the plan is on a scale of 1 to 10, and you use this info to help you plan your current turn.
