@@ -6,9 +6,10 @@ import chess
 import numpy as np
 from keras import Model, callbacks, layers, ops
 from keras import backend as K
-from keras.losses import mean_absolute_error, mean_squared_error
 from keras.optimizers import Adam, Nadam
 from keras.utils import Sequence
+
+import chessrl
 
 from .encoder import get_game_state
 
@@ -28,6 +29,7 @@ class ChessScoreModel:
         model_architecture: str = "cnn",
         compile_model: bool = True,
         weights: str = None,
+        training_mode: bool = False,
     ):
         """Creates the model. This code builds a ResNet that will act as both
         the policy and value network (see AlphaZero paper for more info).
@@ -41,6 +43,8 @@ class ChessScoreModel:
             model: Neural net model.
             __gra = TF Graph. You should not use this externally.
         """
+
+        self.reg = "l2" if training_mode else None
 
         inp = layers.Input((8, 8, 18))
 
@@ -161,7 +165,7 @@ class ChessScoreModel:
             kernel_size=3,
             strides=1,
             padding="same",  # 'same' padding is odd, but apprently what people use
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
         )(inp)
         x = layers.BatchNormalization(axis=-1)(x)
         x = layers.Activation("relu")(x)
@@ -177,24 +181,25 @@ class ChessScoreModel:
             strides=1,
             kernel_size=1,
             padding="same",  # "valid" used in original implementation
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
         )(x)
         val_head = layers.BatchNormalization(axis=-1)(val_head)
         val_head = layers.Activation("relu")(val_head)
         val_head = layers.Flatten()(val_head)
         val_head = layers.Dense(
             256,
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
             activation="relu",
         )(val_head)
         # val_head = Dropout(0.1)(val_head)  # Add dropout for regularization
         val_head = layers.Dense(
             1,
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
             activation="tanh",
             name="value_out",
         )(val_head)
-        val_head = layers.Rescaling(1500)(val_head)  # scale tanh output to centipawns
+        # scale tanh output to centipawns
+        val_head = layers.Rescaling(chessrl.MATE_CP_SCORE)(val_head)
 
         return val_head
 
@@ -206,7 +211,7 @@ class ChessScoreModel:
             kernel_size=3,
             padding="same",
             strides=1,
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
         )(block_input)
         x = layers.BatchNormalization(axis=-1)(x)
         x = layers.Activation("relu")(x)
@@ -216,7 +221,7 @@ class ChessScoreModel:
             kernel_size=3,
             padding="same",
             strides=1,
-            kernel_regularizer="l2",
+            kernel_regularizer=self.reg,
         )(x)
         x = layers.BatchNormalization(axis=-1)(x)
         x = layers.Add()([block_input, x])
@@ -239,16 +244,17 @@ class ChessScoreModel:
 
         # x = layers.GlobalAveragePooling1D(data_format="channels_last")(x)
         # OR
-        x = layers.Conv1D(filters=1, kernel_size=1, kernel_regularizer="l2")(x)
+        x = layers.Conv1D(filters=1, kernel_size=1, kernel_regularizer=self.reg)(x)
         x = layers.Activation("mish")(x)
         x = layers.Flatten()(x)
         # OR
         # x = LinearProjection()(x)
         # x = layers.Flatten()(x)
 
-        x = layers.Dense(256, kernel_regularizer="l2", activation="mish")(x)
-        x = layers.Dense(1, "tanh", kernel_regularizer="l2", name="value_out")(x)
-        x = layers.Rescaling(1500)(x)  # scale tanh output to centipawns
+        x = layers.Dense(256, kernel_regularizer=self.reg, activation="mish")(x)
+        x = layers.Dense(1, "tanh", kernel_regularizer=self.reg, name="value_out")(x)
+        # scale tanh output to centipawns
+        x = layers.Rescaling(chessrl.MATE_CP_SCORE)(x)
 
         return x
 
